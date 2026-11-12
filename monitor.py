@@ -1,3 +1,5 @@
+from datetime import datetime
+import html
 import json
 import os
 import re
@@ -9,8 +11,8 @@ import requests
 TELEGRAM_BOT_TOKEN = "9272449199:AAFIbkYxsYgx52VEzkPgjsQ_raq8Ky8lnxM"
 TELEGRAM_CHAT_ID = "5563031715"
 
-MAX_PRICE = 20000      # Строго до 20 000 грн (20 000 не подходит)
-USD_RATE = 42.0        # Курс для пересчёта цен в $ из Telegram-каналов
+MAX_PRICE = 20000          # Строго до 20 000 грн (20 000 не подходит)
+FALLBACK_USD_RATE = 42.0   # Запасной курс, если API ПриватБанка недоступен
 SEEN_ADS_FILE = "seen_ads.json"
 
 # Публичные Telegram-барахолки (можно добавлять свои @username без собачки)
@@ -58,6 +60,8 @@ EXCLUDE_WORDS = [
     "оплата частинами",
 ]
 
+URGENT_WORDS = ["срочно", "терміново", "торг", "швидко", "быстро"]
+
 # Запросы к внутреннему JSON API OLX (категория 37 = Мобильные телефоны / смартфоны)
 OLX_API_QUERIES = [
     "https://www.olx.ua/api/v1/offers/?offset=0&limit=40&category_id=37&query=s24%20ultra&filter_float_price%3Ato=19999&sort_by=created_at%3Adesc",
@@ -82,6 +86,21 @@ scraper = cloudscraper.create_scraper(
 )
 
 
+def get_live_usd_rate():
+    try:
+        resp = requests.get(
+            "https://api.privatbank.ua/p24api/pubinfo?exchange&coursid=5",
+            timeout=6,
+        )
+        if resp.status_code == 200:
+            for item in resp.json():
+                if item.get("ccy") == "USD":
+                    return float(item.get("sale", FALLBACK_USD_RATE))
+    except Exception:
+        pass
+    return FALLBACK_USD_RATE
+
+
 def load_seen_ads():
     if os.path.exists(SEEN_ADS_FILE):
         try:
@@ -93,7 +112,6 @@ def load_seen_ads():
 
 
 def save_seen_ads(seen_list):
-    # Храним последние 2000 записей, чтобы файл не раздувался
     trimmed = seen_list[-2000:]
     with open(SEEN_ADS_FILE, "w", encoding="utf-8") as f:
         json.dump(trimmed, f, ensure_ascii=False, indent=2)
@@ -105,15 +123,66 @@ def mark_seen(seen_list, seen_set, ad_id):
         seen_list.append(ad_id)
 
 
-def send_telegram(text):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+def send_telegram(html_text, ad_url, photo_urls=None):
+    photo_urls = [p for p in (photo_urls or []) if p and p.startswith("http")][:10]
+    reply_markup = {
+        "inline_keyboard": [
+            [{"text": "🔗 Открыть объявление", "url": ad_url}]
+        ]
+    }
+
+    # 1. Если фотографий несколько (от 2 до 10) — отправляем альбомом
+    if len(photo_urls) >= 2:
+        media_endpoint = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMediaGroup"
+        caption_with_link = f'{html_text[:900]}\n\n👉 <a href="{html.escape(ad_url)}"><b>ОТКРЫТЬ ОБЪЯВЛЕНИЕ</b></a>'
+        media_group = []
+        for idx, p_url in enumerate(photo_urls):
+            item = {"type": "photo", "media": p_url}
+            if idx == 0:
+                item["caption"] = caption_with_link
+                item["parse_mode"] = "HTML"
+            media_group.append(item)
+
+        try:
+            resp = requests.post(
+                media_endpoint,
+                json={"chat_id": TELEGRAM_CHAT_ID, "media": media_group},
+                timeout=20,
+            )
+            if resp.status_code == 200:
+                return
+            print(f"sendMediaGroup не сработал ({resp.status_code}), пробую одно фото...")
+        except Exception as e:
+            print(f"Ошибка sendMediaGroup: {e}")
+
+    # 2. Если фото одно (или альбом не прошёл) — отправляем с большой кнопкой
+    if len(photo_urls) >= 1:
+        photo_endpoint = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "photo": photo_urls[0],
+            "caption": html_text[:1000],
+            "parse_mode": "HTML",
+            "reply_markup": reply_markup,
+        }
+        try:
+            resp = requests.post(photo_endpoint, json=payload, timeout=15)
+            if resp.status_code == 200:
+                return
+        except Exception as e:
+            print(f"Ошибка sendPhoto: {e}")
+
+    # 3. Запасной вариант без фото — текст + кнопка
+    msg_endpoint = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": text,
+        "text": html_text,
+        "parse_mode": "HTML",
         "disable_web_page_preview": False,
+        "reply_markup": reply_markup,
     }
     try:
-        resp = requests.post(url, json=payload, timeout=15)
+        resp = requests.post(msg_endpoint, json=payload, timeout=15)
         if resp.status_code != 200:
             print(f"Ошибка Telegram API: {resp.status_code} {resp.text}")
     except Exception as e:
@@ -154,6 +223,11 @@ def extract_memory(text):
         val = match.group(0).upper().replace(" ", "")
         return val if ("/" in val or "TB" in val or "ТБ" in val) else f"{val} ГБ"
     return "Не указано"
+
+
+def is_urgent_or_bargain(text):
+    text_l = text.lower()
+    return any(w in text_l for w in URGENT_WORDS)
 
 
 def get_checklist(model_name):
@@ -201,22 +275,33 @@ def summarize_condition(description):
     )
 
 
-def format_and_send(model, price_str, memory, condition, city, pub_date, url, seller_type=""):
+def format_and_send(
+    model,
+    price_str,
+    memory,
+    condition,
+    city,
+    pub_date,
+    url,
+    seller_info="",
+    photo_urls=None,
+    urgent=False,
+):
     checklist = get_checklist(model)
-    seller_line = f"Продавец: {seller_type}\n" if seller_type else ""
+    header = "🔥 <b>СРОЧНО / ТОРГ! Новое объявление!</b>\n\n" if urgent else "📱 <b>Найдено новое объявление!</b>\n\n"
+    seller_line = f"{html.escape(seller_info)}\n" if seller_info else ""
     msg = (
-        f"📱 Найдено новое объявление!\n\n"
-        f"Модель: {model}\n"
-        f"Цена: {price_str}\n"
-        f"Память: {memory}\n"
-        f"Состояние: {condition}\n"
+        f"{header}"
+        f"<b>Модель:</b> {html.escape(model)}\n"
+        f"<b>Цена:</b> {html.escape(price_str)}\n"
+        f"<b>Память:</b> {html.escape(memory)}\n"
+        f"<b>Состояние:</b> {html.escape(condition)}\n"
         f"{seller_line}"
-        f"Город: {city}\n"
-        f"Дата публикации: {pub_date}\n\n"
-        f"Ссылка: {url}\n\n"
-        f"Дополнительно: {checklist}"
+        f"<b>Город:</b> {html.escape(city)}\n"
+        f"<b>Дата публикации:</b> {html.escape(pub_date)}\n\n"
+        f"<b>Дополнительно:</b> {html.escape(checklist)}"
     )
-    send_telegram(msg)
+    send_telegram(msg, url, photo_urls)
 
 
 # === 1. ПРОВЕРКА OLX ЧЕРЕЗ JSON API ===
@@ -251,7 +336,6 @@ def check_olx_api(seen_list, seen_set):
                 description = offer.get("description", "")
                 full_url = offer.get("url", f"https://www.olx.ua/d/uk/obyavlenie/-ID{raw_id}.html")
 
-                # Извлекаем точную цену из параметров API
                 price = 0
                 for param in offer.get("params", []):
                     if param.get("key") == "price":
@@ -268,22 +352,54 @@ def check_olx_api(seen_list, seen_set):
                     mark_seen(seen_list, seen_set, ad_id)
                     continue
 
+                # Собираем ВСЕ фото из объявления OLX (до 10 штук)
+                photo_urls = []
+                for p in offer.get("photos", [])[:10]:
+                    raw_photo = p.get("link", "")
+                    if raw_photo:
+                        photo_urls.append(
+                            raw_photo.replace("{width}", "1000").replace("{height}", "1000")
+                        )
+
+                # Проверка продавца и OLX Доставки
+                is_business = offer.get("business", False)
+                seller_type = "Магазин / Бизнес" if is_business else "Частное лицо"
+                has_delivery = offer.get("delivery", {}).get("rock", {}).get("active", False)
+                delivery_str = "✅ OLX Доставка" if has_delivery else "❌ Без OLX Доставки"
+
+                user_created = offer.get("user", {}).get("created", "")
+                is_new_account = False
+                reg_str = ""
+                if user_created and len(user_created) >= 10:
+                    reg_str = f" (на OLX с {user_created[:7]})"
+                    try:
+                        reg_date = datetime.strptime(user_created[:10], "%Y-%m-%d")
+                        if (datetime.now() - reg_date).days < 30:
+                            is_new_account = True
+                    except Exception:
+                        pass
+
+                seller_info = f"Продавец: {seller_type}{reg_str} | {delivery_str}"
+                if is_new_account and not has_delivery and not is_business:
+                    seller_info += "\n⚠️ ВНИМАНИЕ: Новый аккаунт без OLX Доставки!"
+
                 loc = offer.get("location", {})
                 city = loc.get("city", {}).get("name", "Украина")
                 created_time = offer.get("created_time", "")[:16].replace("T", " ") or "Сегодня"
-                is_business = offer.get("business", False)
-                seller_label = "Магазин / Бизнес" if is_business else "Частное лицо"
+                full_text = f"{title} {description}"
 
                 price_formatted = f"{price:,} грн".replace(",", " ")
                 format_and_send(
                     exact_model,
                     price_formatted,
-                    extract_memory(f"{title} {description}"),
+                    extract_memory(full_text),
                     summarize_condition(description),
                     city,
                     created_time,
                     full_url,
-                    seller_label,
+                    seller_info,
+                    photo_urls,
+                    is_urgent_or_bargain(full_text),
                 )
                 mark_seen(seen_list, seen_set, ad_id)
                 count += 1
@@ -329,6 +445,12 @@ def check_shafa(seen_list, seen_set):
                     mark_seen(seen_list, seen_set, ad_id)
                     continue
 
+                photo_urls = []
+                for img in container.find_all("img"):
+                    src = img.get("data-src") or img.get("src")
+                    if src and src.startswith("http") and src not in photo_urls:
+                        photo_urls.append(src)
+
                 price_formatted = f"{price:,} грн".replace(",", " ")
                 format_and_send(
                     exact_model,
@@ -338,6 +460,8 @@ def check_shafa(seen_list, seen_set):
                     "Украина (Shafa)",
                     "Сегодня",
                     full_url,
+                    photo_urls=photo_urls,
+                    urgent=is_urgent_or_bargain(card_text),
                 )
                 mark_seen(seen_list, seen_set, ad_id)
                 count += 1
@@ -382,6 +506,12 @@ def check_prom(seen_list, seen_set):
                     mark_seen(seen_list, seen_set, ad_id)
                     continue
 
+                photo_urls = []
+                for img in card.find_all("img"):
+                    src = img.get("data-src") or img.get("src")
+                    if src and src.startswith("http") and src not in photo_urls:
+                        photo_urls.append(src)
+
                 price_formatted = f"{price:,} грн".replace(",", " ")
                 format_and_send(
                     exact_model,
@@ -391,6 +521,8 @@ def check_prom(seen_list, seen_set):
                     "Украина (Prom.ua)",
                     "Сегодня",
                     full_url,
+                    photo_urls=photo_urls,
+                    urgent=is_urgent_or_bargain(title),
                 )
                 mark_seen(seen_list, seen_set, ad_id)
                 count += 1
@@ -400,7 +532,7 @@ def check_prom(seen_list, seen_set):
 
 
 # === 4. ПРОВЕРКА TELEGRAM-БАРАХОЛОК (ГРН + $) ===
-def check_telegram_channels(seen_list, seen_set):
+def check_telegram_channels(seen_list, seen_set, usd_rate):
     count = 0
     for channel in TELEGRAM_CHANNELS:
         try:
@@ -422,66 +554,4 @@ def check_telegram_channels(seen_list, seen_set):
                     mark_seen(seen_list, seen_set, ad_id)
                     continue
 
-                post_text = text_elem.get_text(" ", strip=True)
-                exact_model = detect_exact_model(post_text)
-                if not exact_model:
-                    mark_seen(seen_list, seen_set, ad_id)
-                    continue
-
-                text_l = post_text.lower()
-                price_uah = 0
-                price_display = ""
-
-                # Сначала ищем цену в гривнах
-                uah_match = re.search(r"\b(\d{1,2}[\s.,]?\d{3})\s*(?:грн|uah|₴)", text_l)
-                # Или в долларах
-                usd_match = re.search(r"(?:\$\s*(\d{3})|\b(\d{3})\s*(?:\$|usd|у\.е\.|уе|дол))", text_l)
-
-                if uah_match:
-                    price_uah = int(re.sub(r"\D", "", uah_match.group(1)))
-                    price_display = f"{price_uah:,} грн".replace(",", " ")
-                elif usd_match:
-                    usd_val = int(usd_match.group(1) or usd_match.group(2))
-                    price_uah = int(usd_val * USD_RATE)
-                    price_display = f"{usd_val}$ (~{price_uah:,} грн)".replace(",", " ")
-                else:
-                    mark_seen(seen_list, seen_set, ad_id)
-                    continue
-
-                if price_uah >= MAX_PRICE or price_uah < 2000:
-                    mark_seen(seen_list, seen_set, ad_id)
-                    continue
-
-                post_url = f"https://t.me/{post_attr}"
-                format_and_send(
-                    exact_model,
-                    price_display,
-                    extract_memory(post_text),
-                    summarize_condition(post_text),
-                    f"Telegram (@{channel})",
-                    "Сегодня",
-                    post_url,
-                )
-                mark_seen(seen_list, seen_set, ad_id)
-                count += 1
-        except Exception as e:
-            print(f"TG {channel} error: {e}")
-    return count
-
-
-def run():
-    seen_list = load_seen_ads()
-    seen_set = set(seen_list)
-
-    total_new = 0
-    total_new += check_olx_api(seen_list, seen_set)
-    total_new += check_shafa(seen_list, seen_set)
-    total_new += check_prom(seen_list, seen_set)
-    total_new += check_telegram_channels(seen_list, seen_set)
-
-    save_seen_ads(seen_list)
-    print(f"Проверка завершена. Новых объявлений: {total_new}")
-
-
-if __name__ == "__main__":
-    run()
+                post_text = text_el
