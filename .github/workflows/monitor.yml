@@ -32,5 +32,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git add seen_ads.json || true
           git commit -m "Update seen ads" || exit 0
+          git pull --rebase
           git push
           
