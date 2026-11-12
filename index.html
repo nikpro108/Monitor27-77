@@ -7,11 +7,12 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #090b10;
-      --glass: rgba(255, 255, 255, 0.07);
-      --glass-strong: rgba(255, 255, 255, 0.12);
+      --bg: #07090e;
+      --glass: rgba(255, 255, 255, 0.065);
+      --glass-strong: rgba(255, 255, 255, 0.13);
       --border: rgba(255, 255, 255, 0.14);
-      --text: #f5f7fa;
+      --border-light: rgba(255, 255, 255, 0.24);
+      --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #38bdf8;
       --accent-glow: rgba(56, 189, 248, 0.35);
@@ -29,31 +30,36 @@
     }
 
     body {
-      background: radial-gradient(circle at 15% 10%, #162238 0%, #090b10 55%, #06070a 100%);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.16) 0%, transparent 42%),
+        radial-gradient(circle at 88% 22%, rgba(52, 211, 153, 0.1) 0%, transparent 40%),
+        linear-gradient(180deg, #0b101b 0%, #07090e 100%);
       color: var(--text);
       min-height: 100vh;
-      padding-bottom: 92px;
+      padding-bottom: 125px;
       overflow-x: hidden;
     }
 
     .container {
-      max-width: 540px;
+      max-width: 560px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 14px;
     }
 
-    /* Header */
+    /* Liquid Glass Header */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      padding: 14px 16px;
+      margin-bottom: 14px;
+      padding: 13px 16px;
       background: var(--glass);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--border);
+      border-top-color: var(--border-light);
       border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
     }
 
     .brand {
@@ -62,16 +68,22 @@
       gap: 10px;
     }
 
-    .logo-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 14px var(--accent);
+    .logo-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #03111a;
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
     .brand h1 {
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: -0.3px;
     }
@@ -84,7 +96,7 @@
       font-weight: 600;
       padding: 6px 11px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
     }
 
@@ -105,13 +117,14 @@
     /* Glass Cards */
     .card {
       background: var(--glass);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
       border: 1px solid var(--border);
+      border-top-color: var(--border-light);
       border-radius: 22px;
       padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      margin-bottom: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     .card-title {
@@ -123,10 +136,9 @@
       align-items: center;
     }
 
-    /* Tabs */
     .tab-content {
       display: none;
-      animation: fadeIn 0.2s ease;
+      animation: fadeIn 0.18s ease;
     }
     .tab-content.active {
       display: block;
@@ -137,21 +149,20 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Lots Feed */
+    /* Feed */
     .lot-card {
       display: flex;
       gap: 12px;
       background: var(--glass);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 12px;
-      margin-bottom: 12px;
-      transition: transform 0.15s ease;
+      padding: 11px;
+      margin-bottom: 10px;
     }
 
     .lot-img {
-      width: 88px;
-      height: 88px;
+      width: 86px;
+      height: 86px;
       border-radius: 14px;
       object-fit: cover;
       background: rgba(255, 255, 255, 0.05);
@@ -167,7 +178,7 @@
     }
 
     .lot-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       line-height: 1.3;
       display: -webkit-box;
@@ -177,9 +188,9 @@
     }
 
     .lot-meta {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
     .lot-bottom {
@@ -187,22 +198,24 @@
       justify-content: space-between;
       align-items: center;
       margin-top: 8px;
+      gap: 6px;
     }
 
     .lot-price {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 800;
       color: var(--green);
+      white-space: nowrap;
     }
 
     .lot-actions {
       display: flex;
-      gap: 6px;
+      gap: 5px;
     }
 
     .btn-sm {
-      padding: 6px 10px;
-      font-size: 12px;
+      padding: 6px 9px;
+      font-size: 11.5px;
       font-weight: 600;
       border-radius: 10px;
       border: 1px solid var(--border);
@@ -210,6 +223,7 @@
       color: var(--text);
       text-decoration: none;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .btn-sm.primary {
@@ -218,7 +232,68 @@
       border: none;
     }
 
-    /* Forms & Inputs */
+    /* Market Catalog & Chart */
+    .market-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 13px;
+      margin-bottom: 10px;
+    }
+
+    .market-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .market-name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .market-tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 9px;
+      border-radius: 12px;
+    }
+
+    .m-stat span {
+      display: block;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    .m-stat strong {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .chart-box {
+      width: 100%;
+      height: 110px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* Inputs & Buttons */
     .field {
       margin-bottom: 12px;
     }
@@ -227,15 +302,15 @@
       display: block;
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     input, select {
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 14px;
+      padding: 11px 13px;
+      border-radius: 13px;
       border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.38);
       color: var(--text);
       font-size: 14px;
       outline: none;
@@ -253,31 +328,26 @@
 
     .btn-main {
       width: 100%;
-      padding: 14px;
-      border-radius: 16px;
+      padding: 13px;
+      border-radius: 15px;
       border: none;
       background: linear-gradient(135deg, #38bdf8, #0284c7);
       color: #03111a;
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 6px 20px var(--accent-glow);
     }
 
-    .btn-main:active {
-      transform: scale(0.98);
-    }
-
-    /* Quick Model Chips */
     .chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 7px;
       margin-bottom: 12px;
     }
 
     .chip {
-      padding: 7px 12px;
+      padding: 6px 11px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
@@ -287,7 +357,24 @@
       cursor: pointer;
     }
 
-    /* Calculator */
+    /* Calculator & Deals */
+    .defect-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .defect-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
     .calc-result {
       padding: 14px;
       border-radius: 16px;
@@ -299,40 +386,36 @@
       margin-top: 10px;
     }
 
-    .defect-toggle {
+    .deal-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 13px;
       background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
       margin-bottom: 8px;
       font-size: 13px;
     }
 
-    .defect-toggle input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
-    }
-
-    /* Bottom Glass Nav */
+    /* Bottom Liquid Glass Dock */
     .nav-bar {
       position: fixed;
-      bottom: 14px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      width: calc(100% - 28px);
-      max-width: 512px;
+      width: calc(100% - 24px);
+      max-width: 536px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      padding: 6px;
-      background: rgba(15, 20, 30, 0.82);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      grid-template-columns: repeat(4, 1fr);
+      padding: 5px;
+      background: rgba(13, 18, 28, 0.85);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      border-top-color: var(--border-light);
+      border-radius: 22px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
       z-index: 100;
     }
 
@@ -340,9 +423,9 @@
       background: none;
       border: none;
       color: var(--muted);
-      padding: 10px 4px;
-      border-radius: 18px;
-      font-size: 12px;
+      padding: 8px 2px;
+      border-radius: 16px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -358,15 +441,15 @@
 
     .toast {
       position: fixed;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       border: 1px solid var(--accent);
       color: var(--text);
-      padding: 10px 16px;
-      border-radius: 14px;
-      font-size: 13px;
+      padding: 9px 15px;
+      border-radius: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       z-index: 200;
       display: none;
@@ -379,46 +462,65 @@
   <div class="container">
     <div class="header">
       <div class="brand">
-        <div class="logo-dot"></div>
+        <div class="logo-badge">LP</div>
         <h1>LotPulse</h1>
       </div>
       <div class="status-pill">
         <div id="statusDot" class="status-indicator"></div>
-        <span id="statusText">Подключение...</span>
+        <span id="statusText">Проверка...</span>
       </div>
     </div>
 
     <!-- TAB 1: LIVE FEED -->
     <div id="tab-feed" class="tab-content active">
-      <div class="card" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-size: 12px; color: var(--muted);">Активный поиск</div>
-          <div id="activeQueryLabel" style="font-size: 14px; font-weight: 700;">Загрузка...</div>
+      <div class="card" style="padding: 12px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <div style="font-size: 11px; color: var(--muted);">Активный радар ПК</div>
+            <div id="activeQueryLabel" style="font-size: 13.5px; font-weight: 700;">Загрузка...</div>
+          </div>
+          <button class="btn-sm primary" onclick="loadLots(true)">Обновить</button>
         </div>
-        <button class="btn-sm primary" onclick="loadLots(true)">Обновить</button>
+        <input type="text" id="localFilterInput" placeholder="Фильтр по названию или городу в ленте..." oninput="renderLots()" style="padding: 9px 12px; font-size: 13px;" />
       </div>
       <div id="lotsContainer">
         <div class="card" style="text-align: center; color: var(--muted); font-size: 13px;">
-          Загружаем свежие объявления с вашего ПК...
+          Загружаем объявления с вашего ПК...
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: RADAR SETTINGS -->
+    <!-- TAB 2: MARKET CATALOG & CHARTS -->
+    <div id="tab-market" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>Динамика цен рынка</span>
+          <span id="chartModelName" style="font-size: 12px; color: var(--accent);">Google Pixel 7 Pro</span>
+        </div>
+        <div class="chart-box" id="chartContainer"></div>
+        <div style="font-size: 11.5px; color: var(--muted);">
+          Нажмите на любую модель ниже, чтобы посмотреть график цены или сразу запустить её поиск на OLX.
+        </div>
+      </div>
+
+      <div id="marketList"></div>
+    </div>
+
+    <!-- TAB 3: RADAR SETTINGS -->
     <div id="tab-radar" class="tab-content">
       <div class="card">
         <div class="card-title">Настройка радара OLX</div>
 
         <div class="chips">
           <div class="chip" onclick="quickPreset('Google Pixel', 2000, 15000)">Google Pixel</div>
-          <div class="chip" onclick="quickPreset('iPhone 13', 7000, 18000)">iPhone 13</div>
-          <div class="chip" onclick="quickPreset('iPhone 15', 14000, 27000)">iPhone 15</div>
-          <div class="chip" onclick="quickPreset('Samsung S23 Ultra', 12000, 26000)">S23 Ultra</div>
+          <div class="chip" onclick="quickPreset('iPhone 13', 7000, 17500)">iPhone 13</div>
+          <div class="chip" onclick="quickPreset('iPhone 15', 14000, 26500)">iPhone 15</div>
+          <div class="chip" onclick="quickPreset('Samsung S23 Ultra', 12000, 25500)">S23 Ultra</div>
         </div>
 
         <div class="field">
           <label>Модель или ключевой запрос</label>
-          <input type="text" id="fQuery" placeholder="Например: Google Pixel 7" />
+          <input type="text" id="fQuery" placeholder="Например: Google Pixel 8" />
         </div>
 
         <div class="row-2">
@@ -446,17 +548,22 @@
       <div class="card">
         <div class="card-title">Адрес туннеля ПК</div>
         <div class="field">
-          <label>Ссылка из окна SSH / Cloudflare (если перезапускали туннель)</label>
+          <label>Актуальная ссылка из окна SSH / Cloudflare</label>
           <input type="text" id="apiUrlInput" />
         </div>
-        <button class="btn-sm" style="width: 100%; padding: 10px;" onclick="updateApiUrl()">Сохранить адрес сервера</button>
+        <button class="btn-sm" style="width: 100%; padding: 11px;" onclick="updateApiUrl()">Сохранить адрес сервера</button>
       </div>
     </div>
 
-    <!-- TAB 3: DEFECT & PROFIT CALCULATOR -->
+    <!-- TAB 4: CALCULATOR & DEALS CRM -->
     <div id="tab-calc" class="tab-content">
       <div class="card">
         <div class="card-title">Калькулятор маржи и дефектов</div>
+
+        <div class="field">
+          <label>Название лота (для сохранения в сделки)</label>
+          <input type="text" id="cTitle" value="iPhone / Pixel" />
+        </div>
 
         <div class="row-2">
           <div class="field">
@@ -469,10 +576,8 @@
           </div>
         </div>
 
-        <div style="font-size: 12px; color: var(--muted); margin: 6px 0 8px;">Вычесть расходы на ремонт / комплект:</div>
-
         <label class="defect-toggle">
-          <span>Замена стекла / дисплея (-3 200 ₴)</span>
+          <span>Замена дисплея / переклейка (-3 200 ₴)</span>
           <input type="checkbox" data-cost="3200" onchange="recalc()" />
         </label>
         <label class="defect-toggle">
@@ -484,43 +589,74 @@
           <input type="checkbox" data-cost="800" onchange="recalc()" />
         </label>
         <label class="defect-toggle">
-          <span>Стекло камеры / мелочи (-450 ₴)</span>
+          <span>Face ID / True Tone / шлейф (-1 400 ₴)</span>
+          <input type="checkbox" data-cost="1400" onchange="recalc()" />
+        </label>
+        <label class="defect-toggle">
+          <span>Стекло камеры / комплект (-450 ₴)</span>
           <input type="checkbox" data-cost="450" onchange="recalc()" />
         </label>
 
         <div class="calc-result">
           <div>
-            <div style="font-size: 12px; color: var(--muted);">Чистая прибыль</div>
+            <div style="font-size: 11.5px; color: var(--muted);">Чистая прибыль</div>
             <div id="cProfit" style="font-size: 20px; font-weight: 800; color: var(--green);">+4 500 ₴</div>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 12px; color: var(--muted);">Потолок выкупа</div>
+            <div style="font-size: 11.5px; color: var(--muted);">Потолок выкупа</div>
             <div id="cMaxBuy" style="font-size: 15px; font-weight: 700;">10 500 ₴</div>
           </div>
         </div>
+
+        <button class="btn-sm primary" style="width: 100%; padding: 11px; margin-top: 10px;" onclick="saveDealFromCalc()">
+          + Добавить в мои сделки
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Мои сделки и избранное</span>
+          <span id="totalDealsProfit" style="color: var(--green); font-size: 13px;">0 ₴</span>
+        </div>
+        <div id="dealsList"></div>
       </div>
     </div>
   </div>
 
   <!-- Bottom Navigation -->
   <div class="nav-bar">
-    <button class="nav-btn active" onclick="switchTab('feed', this)">
+    <button class="nav-btn active" onclick="switchTab('feed', 0)">
       <span>🔥</span>
-      <span>Лента лотов</span>
+      <span>Лента</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('radar', this)">
+    <button class="nav-btn" onclick="switchTab('market', 1)">
+      <span>📊</span>
+      <span>Рынок</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('radar', 2)">
       <span>📡</span>
       <span>Радар</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('calc', this)">
+    <button class="nav-btn" onclick="switchTab('calc', 3)">
       <span>🧮</span>
-      <span>Калькулятор</span>
+      <span>Расчёт</span>
     </button>
   </div>
 
   <script>
-    const DEFAULT_API = "https://7d8ba7e424999b.lhr.life";
+    const DEFAULT_API = "https://a57911775074b7.lhr.life";
     let API_BASE = localStorage.getItem("lotpulse_api") || DEFAULT_API;
+    let cachedLots = [];
+    let deals = JSON.parse(localStorage.getItem("lotpulse_deals") || "[]");
+
+    const MARKET_MODELS = [
+      { name: "Google Pixel 7 Pro 12/128", query: "Google Pixel 7 Pro", avgSell: 13500, maxBuy: 10500, trend: [15200, 14800, 14300, 13900, 13700, 13500] },
+      { name: "Google Pixel 8 8/128", query: "Google Pixel 8", avgSell: 16200, maxBuy: 13000, trend: [18500, 17900, 17300, 16800, 16500, 16200] },
+      { name: "iPhone 13 128GB Neverlock", query: "iPhone 13", avgSell: 16500, maxBuy: 13200, trend: [18200, 17800, 17400, 17000, 16700, 16500] },
+      { name: "iPhone 14 Pro 128GB", query: "iPhone 14 Pro", avgSell: 24500, maxBuy: 20500, trend: [27000, 26400, 25800, 25200, 24800, 24500] },
+      { name: "iPhone 15 128GB", query: "iPhone 15", avgSell: 25500, maxBuy: 21500, trend: [28200, 27600, 26900, 26300, 25900, 25500] },
+      { name: "Samsung S23 Ultra 12/256", query: "Samsung S23 Ultra", avgSell: 24800, maxBuy: 20800, trend: [27500, 26800, 26100, 25500, 25100, 24800] }
+    ];
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
@@ -533,14 +669,15 @@
       const t = document.getElementById("toast");
       t.textContent = text;
       t.style.display = "block";
-      setTimeout(() => { t.style.display = "none"; }, 2600);
+      setTimeout(() => { t.style.display = "none"; }, 2500);
     }
 
-    function switchTab(name, btn) {
+    function switchTab(name, idx) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
       document.getElementById("tab-" + name).classList.add("active");
-      btn.classList.add("active");
+      document.querySelectorAll(".nav-btn")[idx].classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function updateApiUrl() {
@@ -585,43 +722,52 @@
     }
 
     async function loadLots(notify = false) {
-      const container = document.getElementById("lotsContainer");
       try {
-        const res = await fetch(API_BASE + "/api/lots?limit=30");
+        const res = await fetch(API_BASE + "/api/lots?limit=40");
         const data = await res.json();
-        const lots = data.lots || [];
+        cachedLots = data.lots || [];
+        renderLots();
+        if (notify) showToast("Лента обновлена");
+      } catch (e) {
+        document.getElementById("lotsContainer").innerHTML =
+          `<div class="card" style="text-align:center;color:var(--red);font-size:13px;">Нет связи с ПК. Проверьте окна radar.py и туннеля.</div>`;
+      }
+    }
 
-        if (!lots.length) {
-          container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;">Пока нет найденных лотов по этому запросу. Попробуйте расширить бюджет во вкладке «Радар».</div>`;
-          return;
-        }
+    function renderLots() {
+      const container = document.getElementById("lotsContainer");
+      const q = document.getElementById("localFilterInput").value.trim().toLowerCase();
+      const filtered = cachedLots.filter(l =>
+        !q || l.title.toLowerCase().includes(q) || l.city.toLowerCase().includes(q)
+      );
 
-        container.innerHTML = lots.map(lot => {
-          const img = lot.image || "https://via.placeholder.com/150/1e293b/94a3b8?text=OLX";
-          return `
-            <div class="lot-card">
-              <img class="lot-img" src="${img}" alt="" onerror="this.src='https://via.placeholder.com/150/1e293b/94a3b8?text=OLX'"/>
-              <div class="lot-info">
-                <div>
-                  <div class="lot-title">${lot.title}</div>
-                  <div class="lot-meta">📍 ${lot.city}</div>
-                </div>
-                <div class="lot-bottom">
-                  <div class="lot-price">${lot.price.toLocaleString("ru-RU")} ₴</div>
-                  <div class="lot-actions">
-                    <button class="btn-sm" onclick="sendToCalc(${lot.price})">Расчёт</button>
-                    <a class="btn-sm primary" href="${lot.url}" target="_blank">OLX ↗</a>
-                  </div>
+      if (!filtered.length) {
+        container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;">Нет объявлений по текущему фильтру.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((lot, idx) => {
+        const img = lot.image || "https://via.placeholder.com/150/1e293b/94a3b8?text=OLX";
+        const safeTitle = lot.title.replace(/'/g, "");
+        return `
+          <div class="lot-card">
+            <img class="lot-img" src="${img}" alt="" onerror="this.src='https://via.placeholder.com/150/1e293b/94a3b8?text=OLX'"/>
+            <div class="lot-info">
+              <div>
+                <div class="lot-title">${lot.title}</div>
+                <div class="lot-meta">📍 ${lot.city}</div>
+              </div>
+              <div class="lot-bottom">
+                <div class="lot-price">${lot.price.toLocaleString("ru-RU")} ₴</div>
+                <div class="lot-actions">
+                  <button class="btn-sm" onclick="sendToCalc(${lot.price}, '${safeTitle}')">Расчёт</button>
+                  <a class="btn-sm primary" href="${lot.url}" target="_blank">OLX ↗</a>
                 </div>
               </div>
             </div>
-          `;
-        }).join("");
-
-        if (notify) showToast("Лента обновлена");
-      } catch (e) {
-        container.innerHTML = `<div class="card" style="text-align:center;color:var(--red);font-size:13px;">Не удалось подключиться к серверу на ПК. Проверьте, запущены ли radar.py и туннель.</div>`;
-      }
+          </div>
+        `;
+      }).join("");
     }
 
     async function saveRadar() {
@@ -641,38 +787,140 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        showToast(`Готово! Найдено новых: ${data.added_now}`);
+        showToast(`Найдено новых лотов: ${data.added_now}`);
         await checkStatus();
         await loadLots(false);
-        switchTab("feed", document.querySelectorAll(".nav-btn")[0]);
+        switchTab("feed", 0);
       } catch (e) {
         showToast("Ошибка связи с ПК");
       }
     }
 
-    function sendToCalc(price) {
+    /* Market & SVG Chart */
+    function renderMarket() {
+      const list = document.getElementById("marketList");
+      list.innerHTML = MARKET_MODELS.map((m, i) => {
+        const margin = m.avgSell - m.maxBuy;
+        return `
+          <div class="market-item" onclick="drawChart(${i})">
+            <div class="market-top">
+              <div class="market-name">${m.name}</div>
+              <div class="market-tag">Маржа ~${margin.toLocaleString("ru-RU")} ₴</div>
+            </div>
+            <div class="market-grid">
+              <div class="m-stat"><span>Рынок идеал</span><strong>${m.avgSell.toLocaleString("ru-RU")} ₴</strong></div>
+              <div class="m-stat"><span>Выкуп до</span><strong style="color:var(--accent)">${m.maxBuy.toLocaleString("ru-RU")} ₴</strong></div>
+              <div class="m-stat"><span>Ликвидность</span><strong style="color:var(--green)">Высокая</strong></div>
+            </div>
+            <button class="btn-sm primary" style="width:100%; padding:8px;" onclick="event.stopPropagation(); searchFromMarket('${m.query}', ${m.maxBuy})">
+              Искать на OLX до ${m.maxBuy.toLocaleString("ru-RU")} ₴
+            </button>
+          </div>
+        `;
+      }).join("");
+      drawChart(0);
+    }
+
+    function drawChart(index) {
+      const m = MARKET_MODELS[index];
+      document.getElementById("chartModelName").textContent = m.name;
+      const pts = m.trend;
+      const min = Math.min(...pts) - 500;
+      const max = Math.max(...pts) + 500;
+      const w = 320, h = 85;
+      const coords = pts.map((v, i) => {
+        const x = (i / (pts.length - 1)) * (w - 20) + 10;
+        const y = h - 12 - ((v - min) / (max - min)) * (h - 24);
+        return `${x},${y}`;
+      });
+      const last = coords[coords.length - 1].split(",");
+      document.getElementById("chartContainer").innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%">
+          <polyline fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${coords.join(" ")}" />
+          <circle cx="${last[0]}" cy="${last[1]}" r="5" fill="#34d399" />
+          <text x="10" y="14" fill="#94a3b8" font-size="10">6 мес. назад: ${pts[0]} ₴</text>
+          <text x="${w - 115}" y="14" fill="#34d399" font-size="10" font-weight="bold">Сейчас: ${pts[pts.length - 1]} ₴</text>
+        </svg>
+      `;
+    }
+
+    function searchFromMarket(query, maxBuy) {
+      document.getElementById("fQuery").value = query;
+      document.getElementById("fMin").value = Math.round(maxBuy * 0.45);
+      document.getElementById("fMax").value = maxBuy;
+      saveRadar();
+    }
+
+    /* Calculator & Deals */
+    function sendToCalc(price, title = "Лот с OLX") {
+      document.getElementById("cTitle").value = title;
       document.getElementById("cBuy").value = price;
       document.getElementById("cSell").value = Math.round(price * 1.35 / 100) * 100;
       recalc();
-      switchTab("calc", document.querySelectorAll(".nav-btn")[2]);
+      switchTab("calc", 3);
     }
 
-    function recalc() {
+    function getCalcValues() {
       const buy = parseFloat(document.getElementById("cBuy").value) || 0;
       const sell = parseFloat(document.getElementById("cSell").value) || 0;
       let repairs = 0;
       document.querySelectorAll("#tab-calc input[type='checkbox']:checked").forEach(cb => {
         repairs += parseFloat(cb.dataset.cost) || 0;
       });
-      const profit = sell - buy - repairs;
-      const maxBuy = Math.max(0, sell - repairs - 2500);
+      return { buy, sell, repairs, profit: sell - buy - repairs };
+    }
 
+    function recalc() {
+      const { sell, repairs, profit } = getCalcValues();
+      const maxBuy = Math.max(0, sell - repairs - 2500);
       const pEl = document.getElementById("cProfit");
       pEl.textContent = (profit >= 0 ? "+" : "") + profit.toLocaleString("ru-RU") + " ₴";
       pEl.style.color = profit >= 0 ? "var(--green)" : "var(--red)";
       document.getElementById("cMaxBuy").textContent = maxBuy.toLocaleString("ru-RU") + " ₴";
     }
 
+    function saveDealFromCalc() {
+      const title = document.getElementById("cTitle").value.trim() || "Смартфон";
+      const { buy, sell, repairs, profit } = getCalcValues();
+      deals.unshift({ id: Date.now(), title, buy, sell, repairs, profit });
+      localStorage.setItem("lotpulse_deals", JSON.stringify(deals));
+      renderDeals();
+      showToast("Добавлено в сделки");
+    }
+
+    function removeDeal(id) {
+      deals = deals.filter(d => d.id !== id);
+      localStorage.setItem("lotpulse_deals", JSON.stringify(deals));
+      renderDeals();
+    }
+
+    function renderDeals() {
+      const box = document.getElementById("dealsList");
+      const total = deals.reduce((acc, d) => acc + d.profit, 0);
+      document.getElementById("totalDealsProfit").textContent =
+        `Итого: ${total >= 0 ? "+" : ""}${total.toLocaleString("ru-RU")} ₴`;
+
+      if (!deals.length) {
+        box.innerHTML = `<div style="font-size:12.5px;color:var(--muted);text-align:center;padding:8px;">Список сделок пока пуст.</div>`;
+        return;
+      }
+
+      box.innerHTML = deals.map(d => `
+        <div class="deal-row">
+          <div>
+            <div style="font-weight:700;">${d.title}</div>
+            <div style="font-size:11px;color:var(--muted);">Вход: ${d.buy} ₴ · Ремонт: ${d.repairs} ₴ · Выход: ${d.sell} ₴</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <strong style="color:${d.profit >= 0 ? "var(--green)" : "var(--red)"}">${d.profit >= 0 ? "+" : ""}${d.profit} ₴</strong>
+            <button class="btn-sm" onclick="removeDeal(${d.id})">✕</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    renderMarket();
+    renderDeals();
     checkStatus();
     loadLots(false);
     recalc();
