@@ -1,2905 +1,682 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LotPulse Ultimate Pro — Терминал перекупа и аналитики UA</title>
-  <!-- Telegram WebApp SDK -->
+  <title>LotPulse — Терминал перекупщика</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            obsidian: '#05070c',
-            graphite: '#131722',
-            aluminum: '#1C2230',
-            electric: '#3B82F6',
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
     :root {
-      --bg-obsidian: #05070c;
-      --bg-glass: rgba(20, 25, 36, 0.6);
-      --border-glass: rgba(255, 255, 255, 0.12);
-      --accent: #3B82F6;
-      --accent-soft: rgba(59, 130, 246, 0.22);
-      --accent-border: rgba(96, 165, 250, 0.45);
-      --orb-1: #3b82f6;
-      --orb-2: #6366f1;
-      --orb-3: #06b6d4;
-      --spring-ease: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    /* Темы оформления (разблокируются за опыт и сделки) */
-    body[data-theme="emerald"] {
-      --accent: #10B981;
-      --accent-soft: rgba(16, 185, 129, 0.22);
-      --accent-border: rgba(52, 211, 153, 0.45);
-      --orb-1: #10b981;
-      --orb-2: #059669;
-      --orb-3: #14b8a6;
-    }
-    body[data-theme="violet"] {
-      --accent: #A855F7;
-      --accent-soft: rgba(168, 85, 247, 0.22);
-      --accent-border: rgba(192, 132, 252, 0.45);
-      --orb-1: #a855f7;
-      --orb-2: #7c3aed;
-      --orb-3: #ec4899;
-    }
-    body[data-theme="gold"] {
-      --accent: #F59E0B;
-      --accent-soft: rgba(245, 158, 11, 0.22);
-      --accent-border: rgba(251, 191, 36, 0.45);
-      --orb-1: #f59e0b;
-      --orb-2: #ea580c;
-      --orb-3: #eab308;
+      --bg: #090b10;
+      --glass: rgba(255, 255, 255, 0.07);
+      --glass-strong: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #f5f7fa;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --green: #34d399;
+      --red: #fb7185;
+      --amber: #fbbf24;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-obsidian);
-      color: #F8FAFC;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow-x: hidden;
+    body {
+      background: radial-gradient(circle at 15% 10%, #162238 0%, #090b10 55%, #06070a 100%);
+      color: var(--text);
       min-height: 100vh;
+      padding-bottom: 92px;
+      overflow-x: hidden;
     }
 
-    /* Фоновые световые сферы iOS Ambient Mesh */
-    .ambient-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-      background: radial-gradient(circle at 50% 0%, #0b1120 0%, #05070c 78%);
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 16px;
     }
 
-    .ambient-orb {
-      position: absolute;
-      border-radius: 9999px;
-      filter: blur(88px);
-      opacity: 0.35;
-      will-change: transform;
-      transition: background 0.8s ease;
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: var(--glass);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
     }
 
-    .orb-1 {
-      width: 320px;
-      height: 320px;
-      top: -90px;
-      left: -70px;
-      background: radial-gradient(circle, var(--orb-1) 0%, transparent 70%);
-      animation: floatOrb1 16s ease-in-out infinite alternate;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .orb-2 {
-      width: 300px;
-      height: 300px;
-      top: 38%;
-      right: -90px;
-      background: radial-gradient(circle, var(--orb-2) 0%, transparent 70%);
-      animation: floatOrb2 20s ease-in-out infinite alternate;
-    }
-
-    .orb-3 {
-      width: 280px;
-      height: 280px;
-      bottom: -60px;
-      left: 15%;
-      background: radial-gradient(circle, var(--orb-3) 0%, transparent 70%);
-      animation: floatOrb3 18s ease-in-out infinite alternate;
-    }
-
-    @keyframes floatOrb1 {
-      0% { transform: translate3d(0, 0, 0) scale(1); }
-      100% { transform: translate3d(55px, 45px, 0) scale(1.15); }
-    }
-    @keyframes floatOrb2 {
-      0% { transform: translate3d(0, 0, 0) scale(1.05); }
-      100% { transform: translate3d(-50px, -40px, 0) scale(0.92); }
-    }
-    @keyframes floatOrb3 {
-      0% { transform: translate3d(0, 0, 0) scale(0.95); }
-      100% { transform: translate3d(40px, -50px, 0) scale(1.12); }
-    }
-
-    /* Матовое стекло iOS Frosted / Liquid Glass */
-    .glass-panel {
-      background: rgba(20, 25, 36, 0.6);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border: 1px solid var(--border-glass);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 16px 40px rgba(0, 0, 0, 0.45);
-      transition: transform 0.35s var(--spring-ease), box-shadow 0.35s var(--spring-ease), border-color 0.25s ease;
-    }
-
-    .glass-card {
-      background: rgba(22, 27, 38, 0.54);
-      backdrop-filter: blur(22px) saturate(180%);
-      -webkit-backdrop-filter: blur(22px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 8px 24px rgba(0, 0, 0, 0.32);
-      transition: transform 0.32s var(--spring-ease), background-color 0.25s ease, border-color 0.25s ease;
-    }
-
-    .spring-press {
-      transition: transform 0.32s var(--spring-ease), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-    .spring-press:active, .glass-card:active {
-      transform: scale(0.96);
-    }
-
-    @keyframes tabEnter {
-      from { opacity: 0; transform: translateY(12px) scale(0.985); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .tab-animate {
-      animation: tabEnter 0.4s var(--spring-ease) forwards;
-    }
-
-    @keyframes cardCascade {
-      from { opacity: 0; transform: translateY(10px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .card-stagger {
-      opacity: 0;
-      animation: cardCascade 0.38s var(--spring-ease) forwards;
-    }
-
-    .chart-line-draw {
-      stroke-dasharray: 650;
-      stroke-dashoffset: 650;
-      animation: drawStroke 0.85s var(--spring-ease) forwards;
-    }
-    @keyframes drawStroke {
-      to { stroke-dashoffset: 0; }
-    }
-
-    .chart-area-fade {
-      opacity: 0;
-      animation: fadeArea 0.7s ease 0.15s forwards;
-    }
-    @keyframes fadeArea {
-      to { opacity: 1; }
-    }
-
-    /* Модальные окна iOS Sheet */
-    .modal-backdrop {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.32s var(--spring-ease);
-    }
-    .modal-backdrop.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal-sheet {
-      transform: translateY(28px) scale(0.96);
-      opacity: 0;
-      transition: transform 0.42s var(--spring-ease), opacity 0.32s ease;
-    }
-    .modal-backdrop.open .modal-sheet {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-
-    /* Плавающий iOS-док на 4 вкладки */
-    .floating-dock {
-      background: rgba(16, 20, 30, 0.74);
-      backdrop-filter: blur(30px) saturate(200%);
-      -webkit-backdrop-filter: blur(30px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 20px 45px rgba(0, 0, 0, 0.68);
-    }
-
-    #dockActivePill {
-      transition: transform 0.45s var(--spring-ease), width 0.45s var(--spring-ease), background 0.4s ease, border-color 0.4s ease;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 999px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 24px;
-      height: 24px;
+    .logo-dot {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: #ffffff;
-      border: 3px solid var(--accent);
-      box-shadow: 0 2px 12px rgba(59, 130, 246, 0.75);
+      background: var(--accent);
+      box-shadow: 0 0 14px var(--accent);
+    }
+
+    .brand h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+    .status-indicator.online {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+    .status-indicator.offline {
+      background: var(--red);
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Tabs */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Lots Feed */
+    .lot-card {
+      display: flex;
+      gap: 12px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 12px;
+      margin-bottom: 12px;
+      transition: transform 0.15s ease;
+    }
+
+    .lot-img {
+      width: 88px;
+      height: 88px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+    }
+
+    .lot-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .lot-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .lot-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .lot-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .lot-price {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .lot-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--glass-strong);
+      color: var(--text);
+      text-decoration: none;
       cursor: pointer;
     }
 
-    .game-btn {
-      background: rgba(28, 34, 48, 0.65);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      user-select: none;
-      touch-action: manipulation;
-      transition: transform 0.22s var(--spring-ease), border-color 0.2s ease, background-color 0.2s ease;
-    }
-    .game-btn:active {
-      transform: scale(0.92);
-      border-color: var(--accent-border);
-      background: var(--accent-soft);
+    .btn-sm.primary {
+      background: var(--accent);
+      color: #041019;
+      border: none;
     }
 
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.82); }
+    /* Forms & Inputs */
+    .field {
+      margin-bottom: 12px;
     }
-    .live-dot {
-      animation: pulseDot 2.2s infinite ease-in-out;
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-main {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: none;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #03111a;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+
+    .btn-main:active {
+      transform: scale(0.98);
+    }
+
+    /* Quick Model Chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    /* Calculator */
+    .calc-result {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .defect-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .defect-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    /* Bottom Glass Nav */
+    .nav-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 28px);
+      max-width: 512px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 6px;
+      background: rgba(15, 20, 30, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 10px 4px;
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .nav-btn.active {
+      background: var(--glass-strong);
+      color: var(--accent);
+    }
+
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 200;
+      display: none;
     }
   </style>
 </head>
-<body data-theme="blue" class="bg-obsidian text-slate-100 pb-28 selection:bg-blue-500/30">
+<body>
+  <div id="toast" class="toast"></div>
 
-  <!-- ДРЕЙФУЮЩИЕ СВЕТОВЫЕ СФЕРЫ -->
-  <div class="ambient-bg" aria-hidden="true">
-    <div class="ambient-orb orb-1"></div>
-    <div class="ambient-orb orb-2"></div>
-    <div class="ambient-orb orb-3"></div>
-  </div>
-
-  <!-- ВЕРХНЯЯ СТЕКЛЯННАЯ ШАПКА -->
-  <header class="sticky top-0 z-40 glass-panel border-x-0 border-t-0 px-3.5 py-2.5">
-    <div class="max-w-xl mx-auto flex items-center justify-between gap-2">
-      <!-- Логотип + Кликабельный бейдж ранга -->
-      <div class="flex items-center gap-2 min-w-0">
-        <div class="w-9 h-9 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 border border-white/25">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-          </svg>
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="font-extrabold tracking-tight text-sm sm:text-base text-white">Lot<span class="text-blue-400">Pulse</span></span>
-            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">PRO</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot"></span>
-          </div>
-          <button id="openRankModalBtn" type="button" class="spring-press flex items-center gap-1 mt-0.5 text-left group">
-            <span id="headerRankTitle" class="text-[11px] font-semibold text-amber-300 truncate">🏆 Новичок рынка</span>
-            <span class="text-[10px] text-slate-400 group-hover:text-white">• Тема</span>
-          </button>
-        </div>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo-dot"></div>
+        <h1>LotPulse</h1>
       </div>
-
-      <!-- Интерактивная плашка курса доллара -->
-      <button id="openRateModalBtn" type="button" class="spring-press shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/15 backdrop-blur-xl">
-        <div class="text-right">
-          <div class="flex items-center justify-end gap-1">
-            <span class="text-[10px] uppercase tracking-wider font-bold text-blue-400" id="headerRateSource">MONO</span>
-            <span class="text-xs font-mono font-bold text-white" id="headerRateValue">1 $ = 41.65 ₴</span>
-          </div>
-          <div class="text-[10px] text-slate-400 leading-none mt-0.5">Курс USD • Изменить</div>
-        </div>
-        <div class="w-6 h-6 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 font-bold text-xs">
-          $
-        </div>
-      </button>
-    </div>
-  </header>
-
-  <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
-  <main class="relative z-10 max-w-xl mx-auto px-3.5 pt-3.5 space-y-3.5">
-
-    <!-- ==================== ВКЛАДКА 1: РЫНОК И АНАЛИТИКА ==================== -->
-    <section id="tab-market" class="tab-animate space-y-3.5">
-      <!-- Барометр выгоды недели -->
-      <div class="glass-panel rounded-2xl p-3 flex items-center justify-between gap-2.5 border-emerald-400/25">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0 text-sm">
-            📈
-          </div>
-          <div class="min-w-0">
-            <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Барометр выгоды недели</div>
-            <div class="text-xs text-slate-200 truncate mt-0.5">Топ маржа: <strong class="text-white">iPhone 14 Pro</strong> и <strong class="text-white">Galaxy S24 Ultra</strong></div>
-          </div>
-        </div>
-        <button type="button" id="quickBestDealBtn" class="spring-press shrink-0 px-2.5 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-[11px] font-bold text-emerald-300">
-          Открыть
-        </button>
-      </div>
-
-      <!-- Поиск и фильтры -->
-      <div class="space-y-2">
-        <div class="relative">
-          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="Поиск из 44 моделей (iPhone 15 Pro, S24 Ultra, Pixel 9...)"
-            class="w-full bg-white/[0.06] backdrop-blur-xl border border-white/12 focus:border-blue-400/70 rounded-2xl pl-10 pr-9 py-2.5 text-sm text-white placeholder-slate-400 outline-none transition"
-          />
-          <button id="clearSearchBtn" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs p-1">✕</button>
-        </div>
-
-        <!-- Быстрые чипы -->
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          <button type="button" data-chip="all" class="filter-chip spring-press active shrink-0 px-3 py-1.5 rounded-2xl text-xs font-semibold bg-blue-500/80 text-white border border-blue-300/40">
-            Все (44)
-          </button>
-          <button type="button" data-chip="favorites" class="filter-chip spring-press shrink-0 px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-300 border border-white/10">
-            ⭐ Избранное (<span id="favCountBadge">0</span>)
-          </button>
-          <button type="button" data-chip="under20k" class="filter-chip spring-press shrink-0 px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-300 border border-white/10">
-            До 20 000 ₴
-          </button>
-          <button type="button" data-chip="falling" class="filter-chip spring-press shrink-0 px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-300 border border-white/10">
-            Падают ↓
-          </button>
-          <button type="button" data-chip="topmargin" class="filter-chip spring-press shrink-0 px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-300 border border-white/10">
-            Топ маржа 🔥
-          </button>
-        </div>
-
-        <!-- Переключатель 4 брендов -->
-        <div class="grid grid-cols-4 gap-1.5" id="brandTabs">
-          <button type="button" data-brand="all" class="brand-btn spring-press active py-2 px-1 rounded-2xl text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/45 text-center truncate">
-            Все (44)
-          </button>
-          <button type="button" data-brand="Apple" class="brand-btn spring-press py-2 px-1 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-400 border border-white/10 text-center truncate">
-            Apple (12)
-          </button>
-          <button type="button" data-brand="Samsung" class="brand-btn spring-press py-2 px-1 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-400 border border-white/10 text-center truncate">
-            Samsung (12)
-          </button>
-          <button type="button" data-brand="Google" class="brand-btn spring-press py-2 px-1 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-400 border border-white/10 text-center truncate">
-            Pixel (10)
-          </button>
-          <button type="button" data-brand="Xiaomi" class="brand-btn spring-press col-span-4 py-1.5 px-2 rounded-2xl text-xs font-semibold bg-white/[0.05] text-slate-400 border border-white/10 text-center">
-            Xiaomi / POCO (10)
-          </button>
-        </div>
-      </div>
-
-      <!-- КАРТОЧКА АНАЛИТИКИ ВЫБРАННОЙ МОДЕЛИ -->
-      <div id="analyticsCard" class="glass-panel rounded-3xl p-4 space-y-3.5 relative overflow-hidden">
-        <!-- Верхний заголовок выбранной модели -->
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span id="selectedBrandBadge" class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/35">Apple</span>
-              <span id="selectedMemory" class="text-xs text-slate-400 font-mono">128 GB</span>
-              <span id="selectedTrendBadge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">Цена падает ↓ -4.2%</span>
-            </div>
-            <h2 id="selectedModelName" class="text-lg font-extrabold text-white tracking-tight mt-1">iPhone 14 Pro</h2>
-          </div>
-
-          <button id="toggleSelectedFavBtn" type="button" class="spring-press w-9 h-9 rounded-2xl bg-white/[0.07] border border-white/15 flex items-center justify-center text-base" title="В избранное">
-            ☆
-          </button>
-        </div>
-
-        <!-- 4 метрики цен и ликвидности -->
-        <div class="grid grid-cols-2 gap-2">
-          <div class="bg-black/30 border border-white/10 rounded-2xl p-2.5">
-            <div class="text-[10px] text-slate-400 uppercase">Медиана рынка</div>
-            <div id="selectedAvgUah" class="text-sm font-mono font-extrabold text-white mt-0.5">25 650 ₴</div>
-            <div id="selectedMinMaxUah" class="text-[10px] font-mono text-slate-400 mt-0.5">23 500 – 27 800 ₴</div>
-          </div>
-
-          <div class="bg-blue-500/15 border border-blue-400/35 rounded-2xl p-2.5">
-            <div class="text-[10px] text-blue-300 uppercase font-semibold">Ловить до (-12%)</div>
-            <div id="selectedTargetUah" class="text-sm font-mono font-extrabold text-blue-300 mt-0.5">22 572 ₴</div>
-            <div id="selectedTargetUsd" class="text-[10px] font-mono text-blue-200/80 mt-0.5">~$542</div>
-          </div>
-
-          <div class="bg-black/30 border border-white/10 rounded-2xl p-2.5">
-            <div class="text-[10px] text-slate-400 uppercase">Ликвидность</div>
-            <div id="selectedLiquidity" class="text-xs font-mono font-bold text-emerald-400 mt-0.5">96/100 • 1–2 дн.</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Скорость продажи</div>
-          </div>
-
-          <div class="bg-black/30 border border-white/10 rounded-2xl p-2.5">
-            <div class="text-[10px] text-slate-400 uppercase">Потенц. маржа</div>
-            <div id="selectedMarginUah" class="text-xs font-mono font-bold text-amber-300 mt-0.5">+3 078 ₴</div>
-            <div id="selectedMarginUsd" class="text-[10px] font-mono text-slate-400 mt-0.5">~+$74 с перепродажи</div>
-          </div>
-        </div>
-
-        <!-- Интерактивный SVG-график динамики цены -->
-        <div class="bg-black/30 border border-white/10 rounded-2xl p-3 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="text-xs font-semibold text-slate-300" id="chartPointLabel">Нажмите на точку графика для деталей</div>
-            <div class="flex items-center gap-1 bg-white/[0.06] p-0.5 rounded-xl border border-white/10">
-              <button type="button" data-period="7" class="period-btn spring-press px-2.5 py-0.5 rounded-lg text-[11px] font-semibold text-slate-400">7д</button>
-              <button type="button" data-period="30" class="period-btn spring-press active px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-blue-500 text-white">30д</button>
-            </div>
-          </div>
-
-          <div class="w-full h-32 relative select-none">
-            <svg id="priceChartSvg" viewBox="0 0 320 110" class="w-full h-full overflow-visible"></svg>
-          </div>
-        </div>
-
-        <!-- ПРЯМОЙ ПРОСТРЕЛ ПО ПЛОЩАДКАМ В 1 ТАП -->
-        <div class="space-y-1.5">
-          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">🔍 Прострел лотов до целевой цены (новые сверху):</div>
-          <div class="grid grid-cols-3 gap-1.5">
-            <a id="directOlxLink" href="#" target="_blank" rel="noopener noreferrer" class="spring-press py-2 px-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-xs font-bold text-center">
-              OLX.ua ↗
-            </a>
-            <a id="directShafaLink" href="#" target="_blank" rel="noopener noreferrer" class="spring-press py-2 px-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/40 text-purple-300 text-xs font-bold text-center">
-              Shafa.ua ↗
-            </a>
-            <a id="directPromLink" href="#" target="_blank" rel="noopener noreferrer" class="spring-press py-2 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 text-xs font-bold text-center">
-              Prom.ua ↗
-            </a>
-          </div>
-        </div>
-
-        <!-- Быстрые действия с моделью -->
-        <div class="grid grid-cols-3 gap-1.5 pt-0.5">
-          <button id="sendToCalcBtn" type="button" class="spring-press py-2.5 px-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] shadow-md shadow-blue-600/25 border border-white/20 text-center">
-            🧮 Калькулятор
-          </button>
-          <button id="sendToCompareBtn" type="button" class="spring-press py-2.5 px-2 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-slate-200 font-bold text-[11px] border border-white/15 text-center">
-            ⚖️ Сравнить
-          </button>
-          <button id="applyModelToRadarBtn" type="button" class="spring-press py-2.5 px-2 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-blue-300 font-bold text-[11px] border border-blue-400/30 text-center">
-            🎯 В радар
-          </button>
-        </div>
-      </div>
-
-      <!-- Список моделей -->
-      <div class="space-y-2">
-        <div class="flex items-center justify-between px-1">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Каталог смартфонов</h3>
-          <span id="modelsCountLabel" class="text-xs text-slate-400 font-mono">Показано: 44</span>
-        </div>
-        <div id="modelsList" class="space-y-2"></div>
-      </div>
-    </section>
-
-    <!-- ==================== ВКЛАДКА 2: ТЕРМИНАЛ СДЕЛОК ==================== -->
-    <section id="tab-deals" class="hidden tab-animate space-y-3.5">
-      <!-- Переключатель 4 инструментов перекупа -->
-      <div class="glass-panel rounded-2xl p-1.5 grid grid-cols-4 gap-1">
-        <button type="button" data-dealtab="hot" class="deal-sub-btn spring-press active py-2 px-1 rounded-xl text-[11px] font-bold bg-blue-500/80 text-white border border-blue-300/30 truncate">
-          🔥 Лоты
-        </button>
-        <button type="button" data-dealtab="calc" class="deal-sub-btn spring-press py-2 px-1 rounded-xl text-[11px] font-bold text-slate-400 hover:text-white truncate">
-          🧮 Торг
-        </button>
-        <button type="button" data-dealtab="garage" class="deal-sub-btn spring-press py-2 px-1 rounded-xl text-[11px] font-bold text-slate-400 hover:text-white truncate">
-          📒 Гараж
-        </button>
-        <button type="button" data-dealtab="compare" class="deal-sub-btn spring-press py-2 px-1 rounded-xl text-[11px] font-bold text-slate-400 hover:text-white truncate">
-          ⚖️ Сравн.
-        </button>
-      </div>
-
-      <!-- ПОДВКЛАДКА 2.1: ГОРЯЧИЕ ЛОТЫ НИЖЕ РЫНКА -->
-      <div id="dealtab-hot" class="space-y-2.5">
-        <div class="flex items-center justify-between px-1">
-          <div>
-            <h3 class="text-sm font-extrabold text-white">Свежие находки ниже рынка</h3>
-            <p class="text-[11px] text-slate-400">Нажмите «В калькулятор», чтобы рассчитать выкуп и торг</p>
-          </div>
-          <span class="px-2 py-1 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-[10px] font-mono font-bold text-emerald-300">LIVE</span>
-        </div>
-        <div id="hotLotsList" class="space-y-2.5"></div>
-      </div>
-
-      <!-- ПОДВКЛАДКА 2.2: КАЛЬКУЛЯТОР ДЕФЕКТОВ + ГЕНЕРАТОР ТОРГА -->
-      <div id="dealtab-calc" class="hidden space-y-3.5">
-        <div class="glass-panel rounded-3xl p-4 space-y-3.5">
-          <div>
-            <h3 class="text-base font-extrabold text-white">Калькулятор выкупа и торга</h3>
-            <p class="text-xs text-slate-400">Учёт нюансов + готовый текст сообщения продавцу</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div>
-              <label class="text-[11px] font-semibold text-slate-300 block mb-1">Модель смартфона</label>
-              <select id="calcModelSelect" class="w-full bg-slate-900/90 border border-white/15 rounded-2xl px-3 py-2.5 text-xs font-semibold text-white outline-none focus:border-blue-400"></select>
-            </div>
-            <div>
-              <label class="text-[11px] font-semibold text-slate-300 block mb-1">Цена продавца (₴)</label>
-              <input id="calcSellerPrice" type="number" step="100" value="21500" class="w-full bg-white/[0.06] border border-white/15 rounded-2xl px-3 py-2 text-sm font-mono font-bold text-white outline-none focus:border-blue-400" />
-            </div>
-          </div>
-
-          <!-- Чипы дефектов -->
-          <div class="space-y-1.5">
-            <label class="text-[11px] font-semibold text-slate-300 block">Нюансы и состояние (вычитаются из рынка):</label>
-            <div class="flex flex-wrap gap-1.5" id="defectChipsGrid">
-              <button type="button" data-defect="bat" data-cost="1800" data-label="АКБ изношен (<82%)" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-slate-300">
-                🔋 АКБ &lt; 82% (-1 800 ₴)
-              </button>
-              <button type="button" data-defect="screen" data-cost="1500" data-label="царапины на дисплее" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-slate-300">
-                📱 Царапины экрана (-1 500 ₴)
-              </button>
-              <button type="button" data-defect="back" data-cost="2200" data-label="трещина задней крышки" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-slate-300">
-                💥 Трещина крышки (-2 200 ₴)
-              </button>
-              <button type="button" data-defect="bio" data-cost="4500" data-label="не работает Face ID / сканер" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-slate-300">
-                🔒 Нет Face ID (-4 500 ₴)
-              </button>
-              <button type="button" data-defect="box" data-cost="600" data-label="нет коробки и кабеля" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-slate-300">
-                📦 Без комплекта (-600 ₴)
-              </button>
-              <button type="button" data-defect="ideal" data-cost="-800" data-label="идеальное состояние и комплект" class="defect-chip spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] text-emerald-300">
-                ✨ Идеал (+800 ₴)
-              </button>
-            </div>
-          </div>
-
-          <!-- Итоговый расчёт -->
-          <div class="bg-black/35 border border-white/10 rounded-2xl p-3 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-xs text-slate-400">Вердикт по сделке:</span>
-              <span id="calcVerdictBadge" class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">🔥 БРАТЬ СРОЧНО</span>
-            </div>
-            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-white/10">
-              <div>
-                <div class="text-[10px] text-slate-400">Чистая маржа</div>
-                <div id="calcNetProfit" class="text-sm font-mono font-extrabold text-emerald-400">+4 150 ₴</div>
-              </div>
-              <div>
-                <div class="text-[10px] text-slate-400">Доходность</div>
-                <div id="calcRoi" class="text-sm font-mono font-bold text-white">+19.3%</div>
-              </div>
-              <div>
-                <div class="text-[10px] text-slate-400">Предложить торг</div>
-                <div id="calcOfferPrice" class="text-sm font-mono font-extrabold text-blue-300">19 800 ₴</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Генератор текста для торга на OLX -->
-          <div class="bg-blue-500/10 border border-blue-400/30 rounded-2xl p-3 space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs font-bold text-blue-300">💬 Сообщение продавцу для торга</span>
-              <div class="flex gap-1">
-                <button type="button" data-tone="polite" class="bargain-tone-btn spring-press active px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-500 text-white">Вежливый</button>
-                <button type="button" data-tone="fast" class="bargain-tone-btn spring-press px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white/10 text-slate-300">Быстрый выкуп</button>
-              </div>
-            </div>
-            <textarea id="bargainMessageBox" rows="4" readonly class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 leading-relaxed outline-none resize-none"></textarea>
-            <button id="copyBargainBtn" type="button" class="spring-press w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/25">
-              📋 Скопировать текст для переписки
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ПОДВКЛАДКА 2.3: МОЙ ГАРАЖ (УЧЁТ СДЕЛОК И ПРИБЫЛИ) -->
-      <div id="dealtab-garage" class="hidden space-y-3.5">
-        <!-- Сводка портфеля -->
-        <div class="grid grid-cols-3 gap-2">
-          <div class="glass-panel rounded-2xl p-2.5 text-center">
-            <div class="text-[10px] text-slate-400 uppercase">Чистая прибыль</div>
-            <div id="garageTotalProfit" class="text-sm font-mono font-extrabold text-emerald-400 mt-0.5">+0 ₴</div>
-            <div id="garageTotalProfitUsd" class="text-[10px] font-mono text-slate-400">$0</div>
-          </div>
-          <div class="glass-panel rounded-2xl p-2.5 text-center">
-            <div class="text-[10px] text-slate-400 uppercase">В обороте</div>
-            <div id="garageInStockVal" class="text-sm font-mono font-extrabold text-blue-300 mt-0.5">0 ₴</div>
-            <div id="garageInStockCount" class="text-[10px] text-slate-400">0 шт.</div>
-          </div>
-          <div class="glass-panel rounded-2xl p-2.5 text-center">
-            <div class="text-[10px] text-slate-400 uppercase">Закрыто</div>
-            <div id="garageSoldCount" class="text-sm font-mono font-extrabold text-white mt-0.5">0 шт.</div>
-            <div class="text-[10px] text-amber-300">+50 XP / сделка</div>
-          </div>
-        </div>
-
-        <!-- Форма добавления сделки -->
-        <div class="glass-panel rounded-3xl p-4 space-y-3">
-          <h3 class="text-sm font-extrabold text-white">Добавить смартфон в учёт</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <input id="garageModelInput" type="text" placeholder="Модель (напр. iPhone 14 Pro)" class="col-span-2 bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 outline-none focus:border-blue-400" />
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Цена покупки (₴)</label>
-              <input id="garageBuyInput" type="number" placeholder="19500" class="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-blue-400" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Вложения / ремонт (₴)</label>
-              <input id="garageRepairInput" type="number" value="0" placeholder="400" class="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-blue-400" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Цена продажи (₴)</label>
-              <input id="garageSellInput" type="number" placeholder="24500" class="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-blue-400" />
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Статус</label>
-              <select id="garageStatusSelect" class="w-full bg-slate-900 border border-white/15 rounded-xl px-2.5 py-2 text-xs font-semibold text-white outline-none">
-                <option value="sold">✅ Продано</option>
-                <option value="stock">⏳ В продаже</option>
-              </select>
-            </div>
-          </div>
-          <button id="addGarageDealBtn" type="button" class="spring-press w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25">
-            + Записать сделку в гараж
-          </button>
-        </div>
-
-        <div id="garageDealsList" class="space-y-2"></div>
-      </div>
-
-      <!-- ПОДВКЛАДКА 2.4: СРАВНЕНИЕ 2 МОДЕЛЕЙ ЛОБ В ЛОБ -->
-      <div id="dealtab-compare" class="hidden glass-panel rounded-3xl p-4 space-y-3.5">
-        <div>
-          <h3 class="text-base font-extrabold text-white">Сравнение моделей лоб в лоб</h3>
-          <p class="text-xs text-slate-400">Что выгоднее взять под перепродажу или для себя</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <select id="compareModelA" class="bg-slate-900/90 border border-blue-400/40 rounded-2xl px-2.5 py-2 text-xs font-semibold text-white outline-none"></select>
-          <select id="compareModelB" class="bg-slate-900/90 border border-purple-400/40 rounded-2xl px-2.5 py-2 text-xs font-semibold text-white outline-none"></select>
-        </div>
-
-        <div id="compareTableContainer" class="space-y-2"></div>
-      </div>
-    </section>
-
-    <!-- ==================== ВКЛАДКА 3: РАДАР И ЧЕК-ЛИСТ НП ==================== -->
-    <section id="tab-radar" class="hidden tab-animate space-y-4">
-      <div class="glass-panel rounded-3xl p-4 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-base font-extrabold text-white">Настройка охоты за лотами</h2>
-            <p class="text-xs text-slate-400 mt-0.5">Мгновенные алерты от бота при появлении выгодной цены</p>
-          </div>
-          <div class="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
-            🎯
-          </div>
-        </div>
-
-        <!-- Выбор брендов -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-300 block">Отслеживаемые бренды</label>
-          <div class="grid grid-cols-2 gap-2" id="radarBrandsGrid">
-            <button type="button" data-rbrand="Apple" class="radar-brand-btn spring-press active flex items-center justify-between px-3 py-2.5 rounded-2xl bg-blue-500/20 border border-blue-400/55 text-white text-xs font-semibold">
-              <span>Apple iPhone</span>
-              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-            </button>
-            <button type="button" data-rbrand="Samsung" class="radar-brand-btn spring-press active flex items-center justify-between px-3 py-2.5 rounded-2xl bg-blue-500/20 border border-blue-400/55 text-white text-xs font-semibold">
-              <span>Samsung Galaxy</span>
-              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-            </button>
-            <button type="button" data-rbrand="Google" class="radar-brand-btn spring-press flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold">
-              <span>Google Pixel</span>
-              <span class="w-2 h-2 rounded-full bg-slate-600"></span>
-            </button>
-            <button type="button" data-rbrand="Xiaomi" class="radar-brand-btn spring-press flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold">
-              <span>Xiaomi / POCO</span>
-              <span class="w-2 h-2 rounded-full bg-slate-600"></span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Фильтр состояния -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-300 block">Состояние устройства</label>
-          <div class="grid grid-cols-3 gap-2" id="radarConditionGrid">
-            <button type="button" data-cond="ideal" class="radar-cond-btn spring-press py-2 px-2 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold text-center">
-              Идеал
-            </button>
-            <button type="button" data-cond="good" class="radar-cond-btn spring-press active py-2 px-2 rounded-2xl bg-blue-500/20 border border-blue-400/55 text-blue-300 text-xs font-semibold text-center">
-              Хорошее
-            </button>
-            <button type="button" data-cond="any" class="radar-cond-btn spring-press py-2 px-2 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold text-center">
-              Любое
-            </button>
-          </div>
-        </div>
-
-        <!-- Площадки -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-300 block">Площадки парсинга</label>
-          <div class="grid grid-cols-2 gap-2" id="radarSourcesGrid">
-            <button type="button" data-source="OLX" class="radar-source-btn spring-press active px-3 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-400/50 text-emerald-300 text-xs font-semibold flex items-center justify-between">
-              <span>OLX.ua</span>
-              <span>✓</span>
-            </button>
-            <button type="button" data-source="Shafa" class="radar-source-btn spring-press active px-3 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-400/50 text-emerald-300 text-xs font-semibold flex items-center justify-between">
-              <span>Shafa.ua</span>
-              <span>✓</span>
-            </button>
-            <button type="button" data-source="Prom" class="radar-source-btn spring-press px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold flex items-center justify-between">
-              <span>Prom.ua</span>
-              <span>+</span>
-            </button>
-            <button type="button" data-source="TG" class="radar-source-btn spring-press active px-3 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-400/50 text-emerald-300 text-xs font-semibold flex items-center justify-between">
-              <span>ТГ-барахолки</span>
-              <span>✓</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Ползунок бюджета -->
-        <div class="bg-black/30 border border-white/10 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-end justify-between">
-            <div>
-              <div class="text-[11px] text-slate-400 uppercase">Максимальный бюджет</div>
-              <div class="text-xl font-mono font-extrabold text-white mt-0.5" id="radarBudgetUah">20 000 ₴</div>
-            </div>
-            <div class="text-right">
-              <div class="text-[11px] text-slate-400">Эквивалент</div>
-              <div class="text-sm font-mono font-bold text-blue-400" id="radarBudgetUsd">~$480</div>
-            </div>
-          </div>
-
-          <input id="radarBudgetSlider" type="range" min="5000" max="45000" step="500" value="20000" />
-
-          <div class="grid grid-cols-4 gap-1.5 pt-1">
-            <button type="button" data-preset="15000" class="budget-preset-btn spring-press py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-mono text-slate-300">15 000 ₴</button>
-            <button type="button" data-preset="20000" class="budget-preset-btn spring-press py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-mono text-slate-300">20 000 ₴</button>
-            <button type="button" data-preset="25000" class="budget-preset-btn spring-press py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-mono text-slate-300">25 000 ₴</button>
-            <button type="button" data-preset="35000" class="budget-preset-btn spring-press py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-[11px] font-mono text-slate-300">35 000 ₴</button>
-          </div>
-        </div>
-
-        <button id="saveRadarBtn" type="button" class="spring-press w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 text-white font-bold text-sm shadow-lg shadow-blue-600/30 border border-white/20">
-          Сохранить и отправить в бот
-        </button>
-      </div>
-
-      <!-- ИНТЕРАКТИВНЫЙ ЧЕК-ЛИСТ ОСМОТРА НА НОВОЙ ПОЧТЕ -->
-      <div class="glass-panel rounded-3xl p-4 space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <h3 class="text-sm font-extrabold text-white">📦 Чек-лист осмотра на Новой Почте</h3>
-            <p class="text-[11px] text-slate-400">Проверь все 10 пунктов перед оплатой наложки</p>
-          </div>
-          <button id="resetChecklistBtn" type="button" class="spring-press px-2.5 py-1 rounded-xl bg-white/[0.07] text-[11px] font-semibold text-slate-300">Сброс</button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-1.5 bg-white/[0.05] p-1 rounded-2xl border border-white/10">
-          <button type="button" data-os="ios" class="os-check-btn spring-press active py-1.5 rounded-xl text-xs font-bold bg-blue-500 text-white">🍎 iPhone (iOS)</button>
-          <button type="button" data-os="android" class="os-check-btn spring-press py-1.5 rounded-xl text-xs font-bold text-slate-400">🤖 Android</button>
-        </div>
-
-        <!-- Шкала прогресса -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-mono">
-            <span class="text-slate-400">Прогресс проверки</span>
-            <span id="checklistProgressText" class="text-emerald-400 font-bold">0 / 10</span>
-          </div>
-          <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="checklistProgressBar" class="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-300" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <div id="checklistItemsContainer" class="space-y-1.5"></div>
-      </div>
-    </section>
-
-    <!-- ==================== ВКЛАДКА 4: АРКАДА (3 МИНИ-ИГРЫ + XP) ==================== -->
-    <section id="tab-games" class="hidden tab-animate space-y-3">
-      <!-- Плашка опыта -->
-      <div class="glass-panel rounded-2xl p-3 flex items-center justify-between">
-        <div>
-          <div class="text-[10px] uppercase font-bold text-blue-400">Игровой прогресс LotPulse</div>
-          <div class="text-xs text-slate-200 mt-0.5">Очки в играх повышают ранг и открывают темы</div>
-        </div>
-        <div class="text-right font-mono">
-          <div id="gamesXpBadge" class="text-sm font-extrabold text-amber-300">0 XP</div>
-          <button type="button" id="gamesOpenThemesBtn" class="text-[10px] text-blue-400 underline">Темы стекла</button>
-        </div>
-      </div>
-
-      <!-- Переключатель 3 игр -->
-      <div class="glass-panel rounded-2xl p-1.5 grid grid-cols-3 gap-1.5">
-        <button type="button" data-game="tetris" class="game-switch-btn spring-press active py-2 px-2 rounded-xl text-xs font-bold bg-blue-500/80 text-white border border-blue-300/30 shadow-md">
-          🧱 Тетрис
-        </button>
-        <button type="button" data-game="snake" class="game-switch-btn spring-press py-2 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white">
-          🐍 Змейка
-        </button>
-        <button type="button" data-game="ttt" class="game-switch-btn spring-press py-2 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white">
-          ⭕ Крестики
-        </button>
-      </div>
-
-      <!-- ===== ИГРА 1: ТЕТРИС (PULSE BLOCKS) ===== -->
-      <div id="game-tetris" class="glass-panel rounded-3xl p-3.5 space-y-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-extrabold text-white flex items-center gap-1.5">
-              <span>Pulse Blocks</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-mono">10×20</span>
-            </h3>
-            <p class="text-[11px] text-slate-400">Свайпы по полю, кнопки или стрелки</p>
-          </div>
-          <button id="tetrisStartPauseBtn" type="button" class="spring-press px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/25 border border-white/20">
-            Старт
-          </button>
-        </div>
-
-        <div class="grid grid-cols-12 gap-2.5 items-start">
-          <div class="col-span-8 bg-black/45 border border-white/10 rounded-2xl p-1.5 flex items-center justify-center relative" id="tetrisCanvasWrapper">
-            <canvas id="tetrisCanvas" class="rounded-xl block touch-none"></canvas>
-            <div id="tetrisOverlay" class="absolute inset-1.5 rounded-xl bg-obsidian/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-3">
-              <div id="tetrisOverlayTitle" class="text-base font-extrabold text-white">PULSE BLOCKS</div>
-              <div id="tetrisOverlaySub" class="text-xs text-slate-400 mt-1">Нажмите «Старт» для игры</div>
-            </div>
-          </div>
-
-          <div class="col-span-4 space-y-2">
-            <div class="bg-black/35 border border-white/10 rounded-2xl p-2 text-center">
-              <div class="text-[10px] font-bold uppercase text-slate-400 mb-1">Далее</div>
-              <div class="flex items-center justify-center">
-                <canvas id="tetrisNextCanvas" width="76" height="64" class="block"></canvas>
-              </div>
-            </div>
-
-            <div class="bg-black/35 border border-white/10 rounded-2xl p-2">
-              <div class="text-[10px] uppercase text-slate-400">Счёт</div>
-              <div id="tetrisScore" class="text-sm font-mono font-extrabold text-white">0</div>
-            </div>
-
-            <div class="bg-black/35 border border-white/10 rounded-2xl p-2">
-              <div class="text-[10px] uppercase text-blue-400">Рекорд</div>
-              <div id="tetrisBest" class="text-sm font-mono font-extrabold text-blue-400">0</div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-1.5">
-              <div class="bg-black/35 border border-white/10 rounded-2xl p-1.5 text-center">
-                <div class="text-[9px] uppercase text-slate-400">Ур.</div>
-                <div id="tetrisLevel" class="text-xs font-mono font-bold text-emerald-400">1</div>
-              </div>
-              <div class="bg-black/35 border border-white/10 rounded-2xl p-1.5 text-center">
-                <div class="text-[9px] uppercase text-slate-400">Линии</div>
-                <div id="tetrisLines" class="text-xs font-mono font-bold text-slate-200">0</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-5 gap-1.5 pt-1">
-          <button type="button" id="tLeftBtn" class="game-btn py-3 rounded-2xl flex flex-col items-center justify-center text-slate-200">
-            <span class="text-base leading-none">◀</span>
-            <span class="text-[9px] text-slate-400 mt-1">Влево</span>
-          </button>
-          <button type="button" id="tRightBtn" class="game-btn py-3 rounded-2xl flex flex-col items-center justify-center text-slate-200">
-            <span class="text-base leading-none">▶</span>
-            <span class="text-[9px] text-slate-400 mt-1">Вправо</span>
-          </button>
-          <button type="button" id="tRotateBtn" class="game-btn py-3 rounded-2xl flex flex-col items-center justify-center text-blue-400 border-blue-400/35">
-            <span class="text-base leading-none">↻</span>
-            <span class="text-[9px] text-blue-300 mt-1">Поворот</span>
-          </button>
-          <button type="button" id="tSoftDropBtn" class="game-btn py-3 rounded-2xl flex flex-col items-center justify-center text-slate-200">
-            <span class="text-base leading-none">▼</span>
-            <span class="text-[9px] text-slate-400 mt-1">Вниз</span>
-          </button>
-          <button type="button" id="tHardDropBtn" class="game-btn py-3 rounded-2xl flex flex-col items-center justify-center text-emerald-400 border-emerald-400/35">
-            <span class="text-base leading-none">⤓</span>
-            <span class="text-[9px] text-emerald-300 mt-1">Drop</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- ===== ИГРА 2: ЗМЕЙКА (PULSE SNAKE) ===== -->
-      <div id="game-snake" class="hidden glass-panel rounded-3xl p-3.5 space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <h3 class="text-sm font-extrabold text-white">Pulse Snake</h3>
-            <div class="flex items-center gap-3 text-xs font-mono mt-0.5">
-              <span class="text-slate-300">Счёт: <strong id="snakeScore" class="text-white">0</strong></span>
-              <span class="text-blue-400">Рекорд: <strong id="snakeBest">0</strong></span>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" id="snakeSpeedBtn" class="spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.06] border border-white/15 text-[11px] font-semibold text-amber-300">
-              Обычная
-            </button>
-            <button type="button" id="snakeStartPauseBtn" class="spring-press px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 border border-white/20">
-              Старт
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-black/45 border border-white/10 rounded-2xl p-2 flex items-center justify-center relative" id="snakeCanvasWrapper">
-          <canvas id="snakeCanvas" class="rounded-xl block touch-none"></canvas>
-          <div id="snakeOverlay" class="absolute inset-2 rounded-xl bg-obsidian/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-4">
-            <div id="snakeOverlayTitle" class="text-base font-extrabold text-white">PULSE SNAKE</div>
-            <div id="snakeOverlaySub" class="text-xs text-slate-400 mt-1">Свайпайте или жмите кнопки</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 max-w-[230px] mx-auto pt-1">
-          <div></div>
-          <button type="button" data-sdir="UP" class="snake-dir-btn game-btn py-3 rounded-2xl text-center text-base font-bold text-slate-200">▲</button>
-          <div></div>
-          <button type="button" data-sdir="LEFT" class="snake-dir-btn game-btn py-3 rounded-2xl text-center text-base font-bold text-slate-200">◀</button>
-          <button type="button" data-sdir="DOWN" class="snake-dir-btn game-btn py-3 rounded-2xl text-center text-base font-bold text-slate-200">▼</button>
-          <button type="button" data-sdir="RIGHT" class="snake-dir-btn game-btn py-3 rounded-2xl text-center text-base font-bold text-slate-200">▶</button>
-        </div>
-      </div>
-
-      <!-- ===== ИГРА 3: КРЕСТИКИ-НОЛИКИ ===== -->
-      <div id="game-ttt" class="hidden glass-panel rounded-3xl p-4 space-y-3.5">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <h3 class="text-sm font-extrabold text-white">Крестики-нолики</h3>
-            <p id="tttStatus" class="text-xs text-blue-400 font-semibold mt-0.5">Ваш ход (X)</p>
-          </div>
-          <div class="flex items-center gap-1 bg-white/[0.06] p-1 rounded-2xl border border-white/10">
-            <button type="button" data-tttmode="ai" class="ttt-mode-btn spring-press active px-2.5 py-1 rounded-xl text-[11px] font-bold bg-blue-500 text-white">Против ИИ</button>
-            <button type="button" data-tttmode="pvp" class="ttt-mode-btn spring-press px-2.5 py-1 rounded-xl text-[11px] font-bold text-slate-400">На двоих</button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-black/35 border border-white/10 rounded-2xl py-2">
-            <div class="text-[10px] text-blue-400 uppercase font-bold">Игрок X</div>
-            <div id="tttScoreX" class="text-base font-mono font-extrabold text-white">0</div>
-          </div>
-          <div class="bg-black/35 border border-white/10 rounded-2xl py-2">
-            <div class="text-[10px] text-slate-400 uppercase font-bold">Ничьи</div>
-            <div id="tttScoreD" class="text-base font-mono font-extrabold text-slate-300">0</div>
-          </div>
-          <div class="bg-black/35 border border-white/10 rounded-2xl py-2">
-            <div id="tttLabelO" class="text-[10px] text-emerald-400 uppercase font-bold">ИИ (O)</div>
-            <div id="tttScoreO" class="text-base font-mono font-extrabold text-white">0</div>
-          </div>
-        </div>
-
-        <div id="tttBoard" class="grid grid-cols-3 gap-2.5 max-w-[280px] mx-auto aspect-square"></div>
-
-        <button type="button" id="tttResetBtn" class="spring-press w-full py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-slate-100 text-xs font-bold border border-white/15">
-          Новая партия
-        </button>
-      </div>
-    </section>
-  </main>
-
-  <!-- ПЛАВАЮЩИЙ НИЖНИЙ iOS-ДОК НА 4 ВКЛАДКИ -->
-  <nav class="fixed bottom-3 inset-x-3 z-40">
-    <div class="max-w-md mx-auto floating-dock rounded-3xl p-1.5 relative">
-      <div id="dockActivePill" class="absolute top-1.5 bottom-1.5 left-1.5 rounded-2xl pointer-events-none"></div>
-
-      <div class="relative z-10 grid grid-cols-4 gap-1" id="dockButtonsGrid">
-        <button type="button" data-tab="market" class="nav-tab-btn active flex flex-col items-center justify-center py-2 rounded-2xl text-blue-300 transition-colors">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-            <polyline points="16 7 22 7 22 13"></polyline>
-          </svg>
-          <span class="text-[10px] font-semibold mt-0.5">Рынок</span>
-        </button>
-
-        <button type="button" data-tab="deals" class="nav-tab-btn flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 hover:text-slate-200 transition-colors">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          <span class="text-[10px] font-semibold mt-0.5">Сделки</span>
-        </button>
-
-        <button type="button" data-tab="radar" class="nav-tab-btn flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 hover:text-slate-200 transition-colors">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <circle cx="12" cy="12" r="6"></circle>
-            <circle cx="12" cy="12" r="2"></circle>
-          </svg>
-          <span class="text-[10px] font-semibold mt-0.5">Радар</span>
-        </button>
-
-        <button type="button" data-tab="games" class="nav-tab-btn flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 hover:text-slate-200 transition-colors">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="6" width="20" height="12" rx="4"></rect>
-            <line x1="6" y1="12" x2="10" y2="12"></line>
-            <line x1="8" y1="10" x2="8" y2="14"></line>
-            <circle cx="15" cy="11" r="1"></circle>
-            <circle cx="18" cy="13" r="1"></circle>
-          </svg>
-          <span class="text-[10px] font-semibold mt-0.5">Игры</span>
-        </button>
+      <div class="status-pill">
+        <div id="statusDot" class="status-indicator"></div>
+        <span id="statusText">Подключение...</span>
       </div>
     </div>
-  </nav>
 
-  <!-- МОДАЛЬНОЕ ОКНО КУРСА ВАЛЮТ -->
-  <div id="rateModal" class="modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
-    <div class="modal-sheet glass-panel w-full max-w-md rounded-3xl p-5 space-y-4">
-      <div class="flex items-center justify-between">
+    <!-- TAB 1: LIVE FEED -->
+    <div id="tab-feed" class="tab-content active">
+      <div class="card" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <h3 class="text-base font-extrabold text-white">Курс доллара США (USD)</h3>
-          <p class="text-xs text-slate-400">Мгновенный пересчёт всех 44 моделей и расчётов</p>
+          <div style="font-size: 12px; color: var(--muted);">Активный поиск</div>
+          <div id="activeQueryLabel" style="font-size: 14px; font-weight: 700;">Загрузка...</div>
         </div>
-        <button id="closeRateModalBtn" type="button" class="spring-press w-8 h-8 rounded-2xl bg-white/10 text-slate-200 flex items-center justify-center">✕</button>
+        <button class="btn-sm primary" onclick="loadLots(true)">Обновить</button>
       </div>
-
-      <div class="grid grid-cols-2 gap-2.5">
-        <button type="button" id="selectMonoRateBtn" class="spring-press p-3 rounded-2xl bg-white/[0.06] border border-blue-400/55 text-left">
-          <div class="text-[10px] font-bold uppercase text-blue-400">Monobank (Продажа)</div>
-          <div id="monoRateDisplay" class="text-base font-mono font-extrabold text-white mt-1">41.65 ₴</div>
-          <div id="monoRateStatus" class="text-[10px] text-emerald-400 mt-0.5">Автообновление</div>
-        </button>
-
-        <button type="button" id="selectNbuRateBtn" class="spring-press p-3 rounded-2xl bg-white/[0.06] border border-white/10 text-left">
-          <div class="text-[10px] font-bold uppercase text-amber-400">НБУ (Официальный)</div>
-          <div id="nbuRateDisplay" class="text-base font-mono font-extrabold text-white mt-1">41.38 ₴</div>
-          <div id="nbuRateStatus" class="text-[10px] text-slate-400 mt-0.5">Резервный курс</div>
-        </button>
-      </div>
-
-      <div class="bg-black/35 border border-white/10 rounded-2xl p-3 space-y-2">
-        <label for="manualRateInput" class="text-xs font-semibold text-slate-300 block">Свой курс обменника (₴ за $1)</label>
-        <div class="flex gap-2">
-          <input id="manualRateInput" type="number" step="0.05" min="20" max="100" placeholder="41.90" class="flex-1 bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-sm font-mono text-white outline-none focus:border-blue-400" />
-          <button id="applyManualRateBtn" type="button" class="spring-press px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Применить</button>
+      <div id="lotsContainer">
+        <div class="card" style="text-align: center; color: var(--muted); font-size: 13px;">
+          Загружаем свежие объявления с вашего ПК...
         </div>
       </div>
-
-      <button id="resetAutoRateBtn" type="button" class="spring-press w-full py-2.5 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-semibold text-blue-300 border border-white/10">
-        Вернуться к автообновлению (Monobank / НБУ)
-      </button>
     </div>
-  </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО РАНГА И НЕОНОВЫХ ТЕМ СТЕКЛА -->
-  <div id="rankModal" class="modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
-    <div class="modal-sheet glass-panel w-full max-w-md rounded-3xl p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-base font-extrabold text-white">Ранг и темы оформления</h3>
-          <p class="text-xs text-slate-400">Зарабатывайте XP в играх и за закрытые сделки в гараже</p>
+    <!-- TAB 2: RADAR SETTINGS -->
+    <div id="tab-radar" class="tab-content">
+      <div class="card">
+        <div class="card-title">Настройка радара OLX</div>
+
+        <div class="chips">
+          <div class="chip" onclick="quickPreset('Google Pixel', 2000, 15000)">Google Pixel</div>
+          <div class="chip" onclick="quickPreset('iPhone 13', 7000, 18000)">iPhone 13</div>
+          <div class="chip" onclick="quickPreset('iPhone 15', 14000, 27000)">iPhone 15</div>
+          <div class="chip" onclick="quickPreset('Samsung S23 Ultra', 12000, 26000)">S23 Ultra</div>
         </div>
-        <button id="closeRankModalBtn" type="button" class="spring-press w-8 h-8 rounded-2xl bg-white/10 text-slate-200 flex items-center justify-center">✕</button>
+
+        <div class="field">
+          <label>Модель или ключевой запрос</label>
+          <input type="text" id="fQuery" placeholder="Например: Google Pixel 7" />
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label>Цена от (₴)</label>
+            <input type="number" id="fMin" value="2000" />
+          </div>
+          <div class="field">
+            <label>Цена до (₴)</label>
+            <input type="number" id="fMax" value="15000" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Фильтр состояния</label>
+          <select id="fCondition">
+            <option value="good">Только без дефектов (отсеивать битые/iCloud/MDM)</option>
+            <option value="any">Все подряд (включая под восстановление)</option>
+          </select>
+        </div>
+
+        <button class="btn-main" onclick="saveRadar()">Запустить поиск сейчас</button>
       </div>
 
-      <div class="bg-black/35 border border-white/10 rounded-2xl p-3.5 space-y-2">
-        <div class="flex items-center justify-between">
-          <span id="modalRankName" class="text-sm font-extrabold text-amber-300">🏆 Новичок рынка</span>
-          <span id="modalXpTotal" class="text-xs font-mono font-bold text-white">0 XP</span>
+      <div class="card">
+        <div class="card-title">Адрес туннеля ПК</div>
+        <div class="field">
+          <label>Ссылка из окна SSH / Cloudflare (если перезапускали туннель)</label>
+          <input type="text" id="apiUrlInput" />
         </div>
-        <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-          <div id="modalRankBar" class="h-full bg-gradient-to-r from-blue-500 to-amber-400 transition-all duration-300" style="width: 10%"></div>
-        </div>
-        <div id="modalNextRankHint" class="text-[11px] text-slate-400">До следующего ранга: 200 XP</div>
+        <button class="btn-sm" style="width: 100%; padding: 10px;" onclick="updateApiUrl()">Сохранить адрес сервера</button>
       </div>
+    </div>
 
-      <div class="space-y-2">
-        <div class="text-xs font-bold text-slate-300">Неоновая подсветка стекла (нажмите для выбора):</div>
-        <div class="grid grid-cols-2 gap-2" id="themesGrid">
-          <button type="button" data-theme-id="blue" data-req="0" class="theme-select-btn spring-press p-3 rounded-2xl bg-blue-500/20 border border-blue-400 text-left">
-            <div class="text-xs font-extrabold text-blue-300">🔵 Electric Blue</div>
-            <div class="text-[10px] text-slate-300 mt-0.5">Доступно сразу</div>
-          </button>
-          <button type="button" data-theme-id="emerald" data-req="150" class="theme-select-btn spring-press p-3 rounded-2xl bg-white/[0.05] border border-white/10 text-left">
-            <div class="text-xs font-extrabold text-emerald-300">🟢 Cyber Emerald</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Нужно 150 XP</div>
-          </button>
-          <button type="button" data-theme-id="violet" data-req="400" class="theme-select-btn spring-press p-3 rounded-2xl bg-white/[0.05] border border-white/10 text-left">
-            <div class="text-xs font-extrabold text-purple-300">🟣 Ultraviolet Pro</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Нужно 400 XP</div>
-          </button>
-          <button type="button" data-theme-id="gold" data-req="800" class="theme-select-btn spring-press p-3 rounded-2xl bg-white/[0.05] border border-white/10 text-left">
-            <div class="text-xs font-extrabold text-amber-300">🟡 Sunset Gold</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Нужно 800 XP</div>
-          </button>
+    <!-- TAB 3: DEFECT & PROFIT CALCULATOR -->
+    <div id="tab-calc" class="tab-content">
+      <div class="card">
+        <div class="card-title">Калькулятор маржи и дефектов</div>
+
+        <div class="row-2">
+          <div class="field">
+            <label>Цена покупки (₴)</label>
+            <input type="number" id="cBuy" value="8500" oninput="recalc()" />
+          </div>
+          <div class="field">
+            <label>Рынок в идеале (₴)</label>
+            <input type="number" id="cSell" value="13000" oninput="recalc()" />
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: var(--muted); margin: 6px 0 8px;">Вычесть расходы на ремонт / комплект:</div>
+
+        <label class="defect-toggle">
+          <span>Замена стекла / дисплея (-3 200 ₴)</span>
+          <input type="checkbox" data-cost="3200" onchange="recalc()" />
+        </label>
+        <label class="defect-toggle">
+          <span>Замена аккумулятора (-900 ₴)</span>
+          <input type="checkbox" data-cost="900" onchange="recalc()" />
+        </label>
+        <label class="defect-toggle">
+          <span>Задняя крышка / корпус (-800 ₴)</span>
+          <input type="checkbox" data-cost="800" onchange="recalc()" />
+        </label>
+        <label class="defect-toggle">
+          <span>Стекло камеры / мелочи (-450 ₴)</span>
+          <input type="checkbox" data-cost="450" onchange="recalc()" />
+        </label>
+
+        <div class="calc-result">
+          <div>
+            <div style="font-size: 12px; color: var(--muted);">Чистая прибыль</div>
+            <div id="cProfit" style="font-size: 20px; font-weight: 800; color: var(--green);">+4 500 ₴</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12px; color: var(--muted);">Потолок выкупа</div>
+            <div id="cMaxBuy" style="font-size: 15px; font-weight: 700;">10 500 ₴</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ -->
-  <div id="toastBox" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900/90 border border-blue-400/50 text-xs font-semibold text-white shadow-2xl backdrop-blur-xl text-center max-w-[90vw]"></div>
+  <!-- Bottom Navigation -->
+  <div class="nav-bar">
+    <button class="nav-btn active" onclick="switchTab('feed', this)">
+      <span>🔥</span>
+      <span>Лента лотов</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('radar', this)">
+      <span>📡</span>
+      <span>Радар</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('calc', this)">
+      <span>🧮</span>
+      <span>Калькулятор</span>
+    </button>
+  </div>
 
   <script>
-    // ==================== ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP ====================
-    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    if (tg) {
+    const DEFAULT_API = "https://7d8ba7e424999b.lhr.life";
+    let API_BASE = localStorage.getItem("lotpulse_api") || DEFAULT_API;
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    document.getElementById("apiUrlInput").value = API_BASE;
+
+    function showToast(text) {
+      const t = document.getElementById("toast");
+      t.textContent = text;
+      t.style.display = "block";
+      setTimeout(() => { t.style.display = "none"; }, 2600);
+    }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    function updateApiUrl() {
+      const val = document.getElementById("apiUrlInput").value.trim().replace(/\/$/, "");
+      if (!val.startsWith("http")) {
+        showToast("Введите корректную https:// ссылку");
+        return;
+      }
+      API_BASE = val;
+      localStorage.setItem("lotpulse_api", API_BASE);
+      showToast("Адрес сервера обновлён");
+      checkStatus();
+      loadLots(true);
+    }
+
+    function quickPreset(q, min, max) {
+      document.getElementById("fQuery").value = q;
+      document.getElementById("fMin").value = min;
+      document.getElementById("fMax").value = max;
+    }
+
+    async function checkStatus() {
+      const dot = document.getElementById("statusDot");
+      const txt = document.getElementById("statusText");
       try {
-        tg.ready();
-        tg.expand();
-        if (tg.setHeaderColor) tg.setHeaderColor('#05070c');
-        if (tg.setBackgroundColor) tg.setBackgroundColor('#05070c');
+        const res = await fetch(API_BASE + "/api/status");
+        const data = await res.json();
+        dot.className = "status-indicator online";
+        txt.textContent = "ПК Онлайн";
+        if (data.filter) {
+          document.getElementById("activeQueryLabel").textContent =
+            `${data.filter.query} (${data.filter.min_price}–${data.filter.max_price} ₴)`;
+          document.getElementById("fQuery").value = data.filter.query;
+          document.getElementById("fMin").value = data.filter.min_price;
+          document.getElementById("fMax").value = data.filter.max_price;
+          document.getElementById("fCondition").value = data.filter.condition;
+        }
       } catch (e) {
-        console.warn('Telegram WebApp init:', e);
+        dot.className = "status-indicator offline";
+        txt.textContent = "Нет связи";
       }
     }
 
-    function triggerHaptic(style = 'light') {
+    async function loadLots(notify = false) {
+      const container = document.getElementById("lotsContainer");
       try {
-        if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
-          tg.HapticFeedback.impactOccurred(style);
-        }
-      } catch (_) {}
-    }
+        const res = await fetch(API_BASE + "/api/lots?limit=30");
+        const data = await res.json();
+        const lots = data.lots || [];
 
-    function showToast(msg) {
-      const box = document.getElementById('toastBox');
-      if (!box) return;
-      box.textContent = msg;
-      box.classList.remove('hidden');
-      clearTimeout(box._timer);
-      box._timer = setTimeout(() => box.classList.add('hidden'), 2800);
-    }
-
-    // ==================== БАЗА ИЗ 44 ПОПУЛЯРНЫХ Б/У СМАРТФОНОВ ====================
-    let SMARTPHONES = [
-      // APPLE (12)
-      { id: 'ip16', brand: 'Apple', name: 'iPhone 16', mem: '128 GB', min: 31500, max: 36200, trend: -3.2, liq: 94, days: '2–3 дн.', chip: 'Apple A18 • 8GB', history30: [35200, 34900, 34600, 34300, 34100, 33900, 33800] },
-      { id: 'ip15pm', brand: 'Apple', name: 'iPhone 15 Pro Max', mem: '256 GB', min: 38500, max: 44900, trend: -3.8, liq: 97, days: '1–2 дн.', chip: 'A17 Pro • Титан', history30: [43200, 42900, 42500, 42100, 41900, 41600, 41500] },
-      { id: 'ip15p', brand: 'Apple', name: 'iPhone 15 Pro', mem: '128 GB', min: 32500, max: 37800, trend: -4.1, liq: 96, days: '1–2 дн.', chip: 'A17 Pro • 120Hz', history30: [36800, 36400, 36000, 35700, 35400, 35100, 34900] },
-      { id: 'ip15pl', brand: 'Apple', name: 'iPhone 15 Plus', mem: '128 GB', min: 27400, max: 31800, trend: -3.0, liq: 88, days: '3–4 дн.', chip: 'Apple A16 • 6.7"', history30: [30800, 30500, 30200, 30000, 29800, 29650, 29600] },
-      { id: 'ip15', brand: 'Apple', name: 'iPhone 15', mem: '128 GB', min: 24800, max: 28900, trend: -2.9, liq: 95, days: '1–3 дн.', chip: 'Apple A16 • Dynamic Island', history30: [27900, 27600, 27400, 27100, 26900, 26700, 26600] },
-      { id: 'ip14pm', brand: 'Apple', name: 'iPhone 14 Pro Max', mem: '256 GB', min: 28900, max: 33500, trend: -4.5, liq: 96, days: '1–2 дн.', chip: 'Apple A16 • 48MP', history30: [32600, 32200, 31900, 31500, 31200, 31000, 30900] },
-      { id: 'ip14p', brand: 'Apple', name: 'iPhone 14 Pro', mem: '128 GB', min: 23500, max: 27800, trend: -4.2, liq: 98, days: '1–2 дн.', chip: 'Apple A16 • 120Hz', history30: [26900, 26500, 26200, 25900, 25700, 25500, 25400] },
-      { id: 'ip14pl', brand: 'Apple', name: 'iPhone 14 Plus', mem: '128 GB', min: 19200, max: 22600, trend: -3.3, liq: 87, days: '3–4 дн.', chip: 'Apple A15 • 6.7"', history30: [21800, 21500, 21300, 21100, 20950, 20850, 20800] },
-      { id: 'ip14', brand: 'Apple', name: 'iPhone 14', mem: '128 GB', min: 17900, max: 21200, trend: -3.1, liq: 93, days: '2–3 дн.', chip: 'Apple A15 • 6GB', history30: [20400, 20100, 19900, 19700, 19600, 19500, 19400] },
-      { id: 'ip13pm', brand: 'Apple', name: 'iPhone 13 Pro Max', mem: '128 GB', min: 21500, max: 25200, trend: -3.6, liq: 94, days: '2–3 дн.', chip: 'Apple A15 • 120Hz', history30: [24300, 24000, 23800, 23600, 23400, 23200, 23100] },
-      { id: 'ip13p', brand: 'Apple', name: 'iPhone 13 Pro', mem: '128 GB', min: 18400, max: 21800, trend: -3.4, liq: 95, days: '1–3 дн.', chip: 'Apple A15 • 120Hz', history30: [20900, 20600, 20400, 20200, 20100, 20000, 19900] },
-      { id: 'ip13', brand: 'Apple', name: 'iPhone 13', mem: '128 GB', min: 13800, max: 16900, trend: -2.4, liq: 96, days: '1–2 дн.', chip: 'Apple A15 • OLED', history30: [16100, 15900, 15800, 15600, 15500, 15450, 15400] },
-
-      // SAMSUNG (12)
-      { id: 's25u', brand: 'Samsung', name: 'Galaxy S25 Ultra', mem: '256 GB', min: 41500, max: 46800, trend: -4.6, liq: 93, days: '2–3 дн.', chip: 'Snapdragon 8 Elite', history30: [46200, 45700, 45200, 44800, 44500, 44200, 44000] },
-      { id: 's24u', brand: 'Samsung', name: 'Galaxy S24 Ultra', mem: '256 GB', min: 33500, max: 39200, trend: -5.1, liq: 95, days: '1–3 дн.', chip: 'Snapdragon 8 Gen 3', history30: [38200, 37700, 37200, 36800, 36500, 36200, 36000] },
-      { id: 's24p', brand: 'Samsung', name: 'Galaxy S24+', mem: '256 GB', min: 24900, max: 28900, trend: -4.4, liq: 89, days: '2–4 дн.', chip: 'Exynos 2400 • QHD+', history30: [28100, 27800, 27400, 27100, 26900, 26700, 26600] },
-      { id: 's24', brand: 'Samsung', name: 'Galaxy S24', mem: '128 GB', min: 19800, max: 23400, trend: -3.9, liq: 92, days: '2–3 дн.', chip: 'Exynos 2400 • 120Hz', history30: [22600, 22300, 22000, 21800, 21600, 21500, 21400] },
-      { id: 's24fe', brand: 'Samsung', name: 'Galaxy S24 FE', mem: '128 GB', min: 17400, max: 20500, trend: -3.7, liq: 86, days: '3–5 дн.', chip: 'Exynos 2400e • 6.7"', history30: [19800, 19550, 19350, 19150, 19000, 18900, 18850] },
-      { id: 's23u', brand: 'Samsung', name: 'Galaxy S23 Ultra', mem: '256 GB', min: 24500, max: 28800, trend: -4.7, liq: 94, days: '1–3 дн.', chip: 'Snapdragon 8 Gen 2', history30: [28000, 27600, 27200, 26900, 26700, 26500, 26400] },
-      { id: 's23p', brand: 'Samsung', name: 'Galaxy S23+', mem: '256 GB', min: 18200, max: 21500, trend: -3.5, liq: 87, days: '3–4 дн.', chip: 'Snapdragon 8 Gen 2', history30: [20700, 20400, 20200, 20000, 19850, 19750, 19700] },
-      { id: 's23', brand: 'Samsung', name: 'Galaxy S23', mem: '128 GB', min: 15200, max: 18100, trend: -3.2, liq: 93, days: '2–3 дн.', chip: 'Snapdragon 8 Gen 2', history30: [17300, 17100, 16900, 16750, 16650, 16550, 16500] },
-      { id: 's22u', brand: 'Samsung', name: 'Galaxy S22 Ultra', mem: '256 GB', min: 17500, max: 20900, trend: -4.0, liq: 88, days: '2–4 дн.', chip: 'Exynos 2200 • S-Pen', history30: [20100, 19800, 19600, 19400, 19250, 19150, 19100] },
-      { id: 'a55', brand: 'Samsung', name: 'Galaxy A55 5G', mem: '128 GB', min: 11200, max: 13400, trend: -3.3, liq: 91, days: '2–3 дн.', chip: 'Exynos 1480 • 120Hz', history30: [12900, 12700, 12550, 12450, 12350, 12250, 12200] },
-      { id: 'a54', brand: 'Samsung', name: 'Galaxy A54 5G', mem: '128 GB', min: 8800, max: 10600, trend: -2.5, liq: 90, days: '2–3 дн.', chip: 'Exynos 1380 • AMOLED', history30: [10100, 10000, 9900, 9800, 9750, 9700, 9650] },
-      { id: 'flip5', brand: 'Samsung', name: 'Galaxy Z Flip 5', mem: '256 GB', min: 17900, max: 21500, trend: -5.4, liq: 82, days: '4–6 дн.', chip: 'Snapdragon 8 Gen 2', history30: [20900, 20500, 20200, 19900, 19700, 19550, 19450] },
-
-      // GOOGLE PIXEL (10)
-      { id: 'px9pxl', brand: 'Google', name: 'Pixel 9 Pro XL', mem: '256 GB', min: 35800, max: 41200, trend: -4.9, liq: 87, days: '3–4 дн.', chip: 'Google Tensor G4', history30: [40500, 40000, 39500, 39100, 38800, 38500, 38300] },
-      { id: 'px9p', brand: 'Google', name: 'Pixel 9 Pro', mem: '128 GB', min: 31500, max: 36500, trend: -4.8, liq: 88, days: '2–4 дн.', chip: 'Google Tensor G4', history30: [35800, 35300, 34900, 34500, 34200, 33900, 33700] },
-      { id: 'px9', brand: 'Google', name: 'Pixel 9', mem: '128 GB', min: 23900, max: 27900, trend: -4.3, liq: 89, days: '2–4 дн.', chip: 'Google Tensor G4', history30: [27100, 26800, 26400, 26100, 25900, 25700, 25600] },
-      { id: 'px8p', brand: 'Google', name: 'Pixel 8 Pro', mem: '128 GB', min: 20500, max: 24200, trend: -4.6, liq: 91, days: '2–3 дн.', chip: 'Google Tensor G3', history30: [23600, 23200, 22900, 22600, 22400, 22250, 22150] },
-      { id: 'px8', brand: 'Google', name: 'Pixel 8', mem: '128 GB', min: 15400, max: 18400, trend: -3.7, liq: 92, days: '2–3 дн.', chip: 'Google Tensor G3', history30: [17700, 17450, 17250, 17050, 16950, 16850, 16800] },
-      { id: 'px8a', brand: 'Google', name: 'Pixel 8a', mem: '128 GB', min: 13800, max: 16400, trend: -3.5, liq: 88, days: '2–4 дн.', chip: 'Google Tensor G3', history30: [15800, 15600, 15400, 15250, 15150, 15050, 15000] },
-      { id: 'px7p', brand: 'Google', name: 'Pixel 7 Pro', mem: '128 GB', min: 13900, max: 16800, trend: -3.2, liq: 90, days: '2–3 дн.', chip: 'Google Tensor G2', history30: [16000, 15800, 15650, 15500, 15400, 15300, 15250] },
-      { id: 'px7', brand: 'Google', name: 'Pixel 7', mem: '128 GB', min: 10500, max: 12800, trend: -2.8, liq: 91, days: '2–3 дн.', chip: 'Google Tensor G2', history30: [12200, 12050, 11900, 11800, 11700, 11650, 11600] },
-      { id: 'px7a', brand: 'Google', name: 'Pixel 7a', mem: '128 GB', min: 9400, max: 11500, trend: -2.4, liq: 87, days: '3–4 дн.', chip: 'Google Tensor G2', history30: [10900, 10800, 10700, 10600, 10500, 10450, 10400] },
-      { id: 'px6p', brand: 'Google', name: 'Pixel 6 Pro', mem: '128 GB', min: 9800, max: 11900, trend: -2.1, liq: 85, days: '3–5 дн.', chip: 'Google Tensor G1', history30: [11300, 11200, 11100, 11000, 10900, 10850, 10800] },
-
-      // XIAOMI / POCO (10)
-      { id: 'xm14u', brand: 'Xiaomi', name: 'Xiaomi 14 Ultra', mem: '512 GB', min: 31800, max: 36900, trend: -4.9, liq: 86, days: '3–5 дн.', chip: 'Snapdragon 8 Gen 3 • Leica', history30: [36100, 35600, 35200, 34800, 34500, 34200, 34000] },
-      { id: 'xm14', brand: 'Xiaomi', name: 'Xiaomi 14', mem: '256 GB', min: 21500, max: 25200, trend: -4.1, liq: 88, days: '2–4 дн.', chip: 'Snapdragon 8 Gen 3', history30: [24400, 24100, 23800, 23600, 23400, 23250, 23150] },
-      { id: 'xm13p', brand: 'Xiaomi', name: 'Xiaomi 13 Pro', mem: '256 GB', min: 17800, max: 21200, trend: -3.6, liq: 85, days: '3–5 дн.', chip: 'Snapdragon 8 Gen 2', history30: [20300, 20050, 19850, 19650, 19500, 19400, 19350] },
-      { id: 'xm13', brand: 'Xiaomi', name: 'Xiaomi 13', mem: '256 GB', min: 14500, max: 17400, trend: -3.0, liq: 88, days: '2–4 дн.', chip: 'Snapdragon 8 Gen 2', history30: [16600, 16400, 16250, 16100, 16000, 15900, 15850] },
-      { id: 'xm13t', brand: 'Xiaomi', name: 'Xiaomi 13T Pro', mem: '512 GB', min: 15200, max: 18100, trend: -3.4, liq: 89, days: '2–4 дн.', chip: 'Dimensity 9200+ • 144Hz', history30: [17300, 17100, 16900, 16750, 16650, 16550, 16500] },
-      { id: 'poco_f6', brand: 'Xiaomi', name: 'POCO F6', mem: '256 GB', min: 11900, max: 14200, trend: -3.1, liq: 92, days: '1–3 дн.', chip: 'Snapdragon 8s Gen 3', history30: [13600, 13450, 13300, 13200, 13100, 13000, 12950] },
-      { id: 'poco_x6p', brand: 'Xiaomi', name: 'POCO X6 Pro', mem: '512 GB', min: 9800, max: 11800, trend: -2.7, liq: 93, days: '1–3 дн.', chip: 'Dimensity 8300 Ultra', history30: [11200, 11100, 11000, 10900, 10850, 10800, 10750] },
-      { id: 'rn13pp', brand: 'Xiaomi', name: 'Redmi Note 13 Pro+', mem: '256 GB', min: 10200, max: 12300, trend: -2.5, liq: 91, days: '2–3 дн.', chip: 'Dimensity 7200 Ultra', history30: [11700, 11550, 11450, 11350, 11300, 11250, 11200] },
-      { id: 'rn13p', brand: 'Xiaomi', name: 'Redmi Note 13 Pro', mem: '256 GB', min: 8200, max: 9900, trend: -2.3, liq: 90, days: '2–3 дн.', chip: 'Snapdragon 7s Gen 2', history30: [9400, 9300, 9200, 9120, 9060, 9020, 8980] },
-      { id: 'poco_f5', brand: 'Xiaomi', name: 'POCO F5', mem: '256 GB', min: 8900, max: 10800, trend: -2.2, liq: 91, days: '2–3 дн.', chip: 'Snapdragon 7+ Gen 2', history30: [10200, 10100, 10000, 9950, 9900, 9850, 9800] }
-    ];
-
-    async function tryLoadExternalPrices() {
-      try {
-        const res = await fetch('./prices.json', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            SMARTPHONES = data;
-            renderModelsList();
-            selectModel(SMARTPHONES[0].id);
-          }
-        }
-      } catch (_) {}
-    }
-
-    // ==================== ГЛОБАЛЬНОЕ СОСТОЯНИЕ И LOCALSTORAGE ====================
-    const savedRate = parseFloat(localStorage.getItem('lotpulse_usd_rate'));
-    const savedSource = localStorage.getItem('lotpulse_rate_source');
-    const savedFavs = JSON.parse(localStorage.getItem('lotpulse_favs') || '["ip14p","s24u"]');
-    const savedGarage = JSON.parse(localStorage.getItem('lotpulse_garage') || '[]');
-    const savedTheme = localStorage.getItem('lotpulse_theme') || 'blue';
-    const savedBonusXp = Number(localStorage.getItem('lotpulse_bonus_xp') || 0);
-
-    const state = {
-      usdRate: !isNaN(savedRate) ? savedRate : 41.65,
-      rateSource: savedSource || 'MONO',
-      monoRate: 41.65,
-      nbuRate: 41.38,
-      selectedModelId: 'ip14p',
-      chartPeriod: 30,
-      filterChip: 'all',
-      filterBrand: 'all',
-      searchQuery: '',
-      favorites: new Set(savedFavs),
-      radarBrands: new Set(['Apple', 'Samsung']),
-      radarSources: new Set(['OLX', 'Shafa', 'TG']),
-      radarCondition: 'good',
-      radarBudget: 20000,
-      activeTab: 'market',
-      activeDealTab: 'hot',
-      activeGame: 'tetris',
-      selectedDefects: new Set(),
-      bargainTone: 'polite',
-      garageDeals: savedGarage,
-      checklistOs: 'ios',
-      checkedSteps: new Set(),
-      theme: savedTheme,
-      bonusXp: savedBonusXp
-    };
-
-    function formatUah(val) {
-      return Math.round(val).toLocaleString('ru-RU') + ' ₴';
-    }
-    function formatUsd(uahVal) {
-      return '$' + Math.round(uahVal / state.usdRate).toLocaleString('en-US');
-    }
-    function persistRate() {
-      localStorage.setItem('lotpulse_usd_rate', String(state.usdRate));
-      localStorage.setItem('lotpulse_rate_source', state.rateSource);
-    }
-
-    // ==================== СИСТЕМА РАНГОВ, XP И НЕОНОВЫХ ТЕМ ====================
-    function calculateTotalXp() {
-      const tBest = Number(localStorage.getItem('lotpulse_tetris_best') || 0);
-      const sBest = Number(localStorage.getItem('lotpulse_snake_best') || 0);
-      const soldDeals = state.garageDeals.filter(d => d.status === 'sold').length;
-      return Math.floor(tBest / 10) + sBest + soldDeals * 50 + state.bonusXp;
-    }
-
-    function getRankInfo(xp) {
-      if (xp >= 800) return { title: '🦈 Акула OLX', next: 1500, pct: 100 };
-      if (xp >= 400) return { title: '🐺 Волк перекупа', next: 800, pct: Math.min(100, Math.round(((xp - 400) / 400) * 100)) };
-      if (xp >= 150) return { title: '🎯 Охотник за скидками', next: 400, pct: Math.min(100, Math.round(((xp - 150) / 250) * 100)) };
-      return { title: '🏆 Новичок рынка', next: 150, pct: Math.min(100, Math.round((xp / 150) * 100)) };
-    }
-
-    function updateRankAndThemeUI() {
-      const xp = calculateTotalXp();
-      const info = getRankInfo(xp);
-      document.getElementById('headerRankTitle').textContent = info.title;
-      document.getElementById('gamesXpBadge').textContent = `${xp} XP`;
-      document.getElementById('modalRankName').textContent = info.title;
-      document.getElementById('modalXpTotal').textContent = `${xp} XP`;
-      document.getElementById('modalRankBar').style.width = `${Math.max(8, info.pct)}%`;
-      document.getElementById('modalNextRankHint').textContent = xp >= 800
-        ? 'Максимальный ранг достигнут! Все темы открыты.'
-        : `До следующего ранга: ${info.next - xp} XP`;
-
-      document.body.setAttribute('data-theme', state.theme);
-      document.querySelectorAll('.theme-select-btn').forEach(btn => {
-        const req = Number(btn.dataset.req);
-        const tid = btn.dataset.themeId;
-        const unlocked = xp >= req;
-        const isCurrent = state.theme === tid;
-        btn.classList.toggle('opacity-50', !unlocked);
-        btn.classList.toggle('border-blue-400', isCurrent);
-      });
-    }
-
-    const rankModal = document.getElementById('rankModal');
-    document.getElementById('openRankModalBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      updateRankAndThemeUI();
-      rankModal.classList.add('open');
-    });
-    document.getElementById('gamesOpenThemesBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      updateRankAndThemeUI();
-      rankModal.classList.add('open');
-    });
-    document.getElementById('closeRankModalBtn').addEventListener('click', () => rankModal.classList.remove('open'));
-    rankModal.addEventListener('click', e => { if (e.target === rankModal) rankModal.classList.remove('open'); });
-
-    document.querySelectorAll('.theme-select-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const req = Number(btn.dataset.req);
-        const xp = calculateTotalXp();
-        if (xp < req) {
-          showToast(`Нужно ${req} XP (у вас ${xp} XP). Сыграйте в Тетрис или закройте сделку!`);
+        if (!lots.length) {
+          container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;">Пока нет найденных лотов по этому запросу. Попробуйте расширить бюджет во вкладке «Радар».</div>`;
           return;
         }
-        triggerHaptic('medium');
-        state.theme = btn.dataset.themeId;
-        localStorage.setItem('lotpulse_theme', state.theme);
-        updateRankAndThemeUI();
-        rankModal.classList.remove('open');
-        showToast('Неоновая тема стекла обновлена!');
-      });
-    });
 
-    // ==================== ЖИВОЙ КУРС ВАЛЮТ ====================
-    async function fetchExchangeRates() {
-      try {
-        const monoRes = await fetch('https://api.monobank.ua/bank/currency');
-        if (monoRes.ok) {
-          const list = await monoRes.json();
-          const usdUah = list.find(item => item.currencyCodeA === 840 && item.currencyCodeB === 980);
-          if (usdUah && (usdUah.rateSell || usdUah.rateCross)) {
-            state.monoRate = Number((usdUah.rateSell || usdUah.rateCross).toFixed(2));
-            if (state.rateSource === 'MONO') {
-              state.usdRate = state.monoRate;
-              persistRate();
-            }
-            document.getElementById('monoRateDisplay').textContent = state.monoRate.toFixed(2) + ' ₴';
-            document.getElementById('monoRateStatus').textContent = 'Онлайн • API';
-          }
-        }
-      } catch (_) {
-        document.getElementById('monoRateStatus').textContent = 'Кэш • Резерв';
-      }
-
-      try {
-        const nbuRes = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?valcode=USD&json');
-        if (nbuRes.ok) {
-          const arr = await nbuRes.json();
-          if (arr && arr[0] && arr[0].rate) {
-            state.nbuRate = Number(arr[0].rate.toFixed(2));
-            if (state.rateSource === 'NBU') {
-              state.usdRate = state.nbuRate;
-              persistRate();
-            }
-            document.getElementById('nbuRateDisplay').textContent = state.nbuRate.toFixed(2) + ' ₴';
-            document.getElementById('nbuRateStatus').textContent = 'Онлайн • НБУ';
-          }
-        }
-      } catch (_) {
-        document.getElementById('nbuRateStatus').textContent = 'Кэш • НБУ';
-      }
-
-      updateAllPricesUI();
-    }
-
-    function updateAllPricesUI() {
-      document.getElementById('headerRateSource').textContent = state.rateSource;
-      document.getElementById('headerRateValue').textContent = `1 $ = ${state.usdRate.toFixed(2)} ₴`;
-      selectModel(state.selectedModelId);
-      renderModelsList();
-      renderHotLots();
-      recalculateDeal();
-      renderGarage();
-      updateRadarBudgetUI();
-    }
-
-    const rateModal = document.getElementById('rateModal');
-    document.getElementById('openRateModalBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      rateModal.classList.add('open');
-    });
-    document.getElementById('closeRateModalBtn').addEventListener('click', () => rateModal.classList.remove('open'));
-    rateModal.addEventListener('click', e => { if (e.target === rateModal) rateModal.classList.remove('open'); });
-
-    document.getElementById('selectMonoRateBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      state.rateSource = 'MONO';
-      state.usdRate = state.monoRate;
-      persistRate();
-      updateAllPricesUI();
-      rateModal.classList.remove('open');
-      showToast(`Курс Monobank: 1 $ = ${state.usdRate.toFixed(2)} ₴`);
-    });
-
-    document.getElementById('selectNbuRateBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      state.rateSource = 'NBU';
-      state.usdRate = state.nbuRate;
-      persistRate();
-      updateAllPricesUI();
-      rateModal.classList.remove('open');
-      showToast(`Курс НБУ: 1 $ = ${state.usdRate.toFixed(2)} ₴`);
-    });
-
-    document.getElementById('applyManualRateBtn').addEventListener('click', () => {
-      const val = parseFloat(document.getElementById('manualRateInput').value);
-      if (!isNaN(val) && val >= 20 && val <= 100) {
-        triggerHaptic('medium');
-        state.rateSource = 'СВОЙ';
-        state.usdRate = Number(val.toFixed(2));
-        persistRate();
-        updateAllPricesUI();
-        rateModal.classList.remove('open');
-        showToast(`Свой курс: 1 $ = ${state.usdRate.toFixed(2)} ₴`);
-      } else {
-        showToast('Введите курс от 20 до 100 ₴');
-      }
-    });
-
-    document.getElementById('resetAutoRateBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      state.rateSource = 'MONO';
-      state.usdRate = state.monoRate;
-      persistRate();
-      fetchExchangeRates();
-      rateModal.classList.remove('open');
-      showToast('Автообновление курса включено');
-    });
-
-    // ==================== ВКЛАДКА 1: КАТАЛОГ, ГРАФИКИ И ПРЯМЫЕ ССЫЛКИ ====================
-    function toggleFavorite(modelId) {
-      triggerHaptic('light');
-      if (state.favorites.has(modelId)) state.favorites.delete(modelId);
-      else state.favorites.add(modelId);
-      localStorage.setItem('lotpulse_favs', JSON.stringify(Array.from(state.favorites)));
-      document.getElementById('favCountBadge').textContent = state.favorites.size;
-      selectModel(state.selectedModelId);
-      renderModelsList();
-    }
-
-    function getFilteredModels() {
-      return SMARTPHONES.filter(m => {
-        const median = Math.round((m.min + m.max) / 2);
-        const margin = median - Math.round(median * 0.88);
-        if (state.filterBrand !== 'all' && m.brand !== state.filterBrand) return false;
-        if (state.filterChip === 'favorites' && !state.favorites.has(m.id)) return false;
-        if (state.filterChip === 'under20k' && median > 20000) return false;
-        if (state.filterChip === 'falling' && m.trend > -3.5) return false;
-        if (state.filterChip === 'topmargin' && margin < 3200) return false;
-        if (state.searchQuery.trim() !== '') {
-          const q = state.searchQuery.toLowerCase();
-          if (!m.name.toLowerCase().includes(q) && !m.brand.toLowerCase().includes(q) && !String(median).includes(q)) return false;
-        }
-        return true;
-      });
-    }
-
-    function renderModelsList() {
-      const container = document.getElementById('modelsList');
-      const items = getFilteredModels();
-      document.getElementById('modelsCountLabel').textContent = `Показано: ${items.length}`;
-      document.getElementById('favCountBadge').textContent = state.favorites.size;
-
-      if (items.length === 0) {
-        container.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-xs text-slate-400">Модели по вашему фильтру не найдены</div>`;
-        return;
-      }
-
-      container.innerHTML = items.map((m, idx) => {
-        const isSelected = m.id === state.selectedModelId;
-        const isFav = state.favorites.has(m.id);
-        const median = Math.round((m.min + m.max) / 2);
-        const catchPrice = Math.round(median * 0.88);
-        const delay = Math.min(idx * 20, 240);
-        return `
-          <div style="animation-delay:${delay}ms" class="card-stagger glass-card rounded-2xl p-3 flex items-center justify-between gap-2.5 ${isSelected ? 'border-blue-400/70 bg-blue-500/15' : ''}">
-            <button type="button" data-model-id="${m.id}" class="model-item-btn flex-1 text-left min-w-0">
-              <div class="flex items-center gap-1.5">
-                <span class="text-[10px] font-bold uppercase text-slate-400">${m.brand}</span>
-                <span class="text-[10px] text-slate-500 font-mono">• ${m.mem}</span>
-                <span class="text-[10px] text-emerald-400 font-mono">• Ликв. ${m.liq}%</span>
-              </div>
-              <div class="text-sm font-bold text-white truncate mt-0.5">${m.name}</div>
-              <div class="text-[11px] text-blue-300 font-mono mt-0.5">Ловить до: ${formatUah(catchPrice)}</div>
-            </button>
-
-            <div class="flex items-center gap-2.5 shrink-0">
-              <button type="button" data-model-id="${m.id}" class="model-item-btn text-right">
-                <div class="text-sm font-mono font-extrabold text-white">${formatUah(median)}</div>
-                <div class="text-[11px] font-mono text-slate-400">${formatUsd(median)}</div>
-                <div class="text-[10px] font-semibold text-emerald-400">${m.trend}%</div>
-              </button>
-              <button type="button" data-fav-id="${m.id}" class="fav-toggle-btn spring-press w-8 h-8 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm ${isFav ? 'text-amber-300' : 'text-slate-500'}">
-                ${isFav ? '★' : '☆'}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      container.querySelectorAll('.model-item-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          triggerHaptic('light');
-          selectModel(btn.dataset.modelId);
-          document.getElementById('analyticsCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
-      });
-
-      container.querySelectorAll('.fav-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleFavorite(btn.dataset.favId);
-        });
-      });
-    }
-
-    function renderPriceChart(model) {
-      const svg = document.getElementById('priceChartSvg');
-      const fullHist = model.history30;
-      const pointsData = state.chartPeriod === 7
-        ? fullHist.slice(-4).map((v, idx) => ({ label: `День ${(idx + 1) * 2 - 1}`, val: v }))
-        : fullHist.map((v, idx) => ({ label: `${idx * 5 + 1}-й день`, val: v }));
-
-      const W = 320;
-      const H = 110;
-      const padX = 18;
-      const padY = 18;
-
-      const values = pointsData.map(p => p.val);
-      const minV = Math.min(...values) * 0.985;
-      const maxV = Math.max(...values) * 1.015;
-      const span = Math.max(maxV - minV, 1);
-
-      const coords = pointsData.map((p, i) => {
-        const x = padX + (i / (pointsData.length - 1)) * (W - padX * 2);
-        const y = H - padY - ((p.val - minV) / span) * (H - padY * 2);
-        return { x, y, ...p };
-      });
-
-      const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
-      const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${H - 6} L ${coords[0].x.toFixed(1)} ${H - 6} Z`;
-
-      svg.innerHTML = `
-        <defs>
-          <linearGradient id="pulseChartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.42"/>
-            <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.0"/>
-          </linearGradient>
-        </defs>
-        <path class="chart-area-fade" d="${areaPath}" fill="url(#pulseChartGrad)" />
-        <path class="chart-line-draw" d="${linePath}" fill="none" stroke="#60A5FA" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
-        ${coords.map((c, idx) => `
-          <g class="chart-pt cursor-pointer" data-idx="${idx}">
-            <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="12" fill="transparent" />
-            <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" fill="#05070c" stroke="#93C5FD" stroke-width="2.2" />
-          </g>
-        `).join('')}
-      `;
-
-      const labelEl = document.getElementById('chartPointLabel');
-      const last = coords[coords.length - 1];
-      labelEl.innerHTML = `<span class="text-slate-400">${last.label}:</span> <span class="text-white font-mono">${formatUah(last.val)}</span> <span class="text-blue-400 font-mono">(${formatUsd(last.val)})</span>`;
-
-      svg.querySelectorAll('.chart-pt').forEach(g => {
-        g.addEventListener('click', () => {
-          triggerHaptic('light');
-          const c = coords[Number(g.dataset.idx)];
-          labelEl.innerHTML = `<span class="text-blue-400">${c.label}:</span> <span class="text-white font-mono font-bold">${formatUah(c.val)}</span> <span class="text-slate-400 font-mono">(${formatUsd(c.val)})</span>`;
-        });
-      });
-    }
-
-    function buildMarketplaceUrls(modelName, maxPrice) {
-      const slug = modelName.toLowerCase().replace(/[^a-z0-9а-яёіїє]+/gi, '-').replace(/^-|-$/g, '');
-      const query = encodeURIComponent(modelName);
-      const minFilter = Math.round(maxPrice * 0.45);
-      return {
-        olx: `https://www.olx.ua/uk/elektronika/telefony-i-aksesuary/mobilnye-telefony-smartfony/q-${slug}/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=${minFilter}&search%5Bfilter_float_price:to%5D=${maxPrice}`,
-        shafa: `https://shafa.ua/uk/elektronika/telefony-i-aksessuary/mobilnye-telefony?search_text=${query}&price_to=${maxPrice}&sort=created_at`,
-        prom: `https://prom.ua/ua/search?search_term=${query}&price_local__lte=${maxPrice}`
-      };
-    }
-
-    function selectModel(modelId) {
-      const m = SMARTPHONES.find(item => item.id === modelId) || SMARTPHONES[0];
-      state.selectedModelId = m.id;
-
-      const median = Math.round((m.min + m.max) / 2);
-      const target = Math.round(median * 0.88);
-      const margin = median - target;
-      const isFav = state.favorites.has(m.id);
-
-      document.getElementById('selectedBrandBadge').textContent = m.brand;
-      document.getElementById('selectedMemory').textContent = m.mem;
-      document.getElementById('selectedModelName').textContent = m.name;
-      document.getElementById('selectedTrendBadge').textContent = `Цена падает ↓ ${m.trend}%`;
-
-      const favBtn = document.getElementById('toggleSelectedFavBtn');
-      favBtn.textContent = isFav ? '★' : '☆';
-      favBtn.classList.toggle('text-amber-300', isFav);
-
-      document.getElementById('selectedAvgUah').textContent = formatUah(median);
-      document.getElementById('selectedMinMaxUah').textContent = `${m.min.toLocaleString('ru-RU')} – ${m.max.toLocaleString('ru-RU')} ₴`;
-
-      document.getElementById('selectedTargetUah').textContent = formatUah(target);
-      document.getElementById('selectedTargetUsd').textContent = `~${formatUsd(target)}`;
-
-      document.getElementById('selectedLiquidity').textContent = `${m.liq}/100 • ${m.days}`;
-      document.getElementById('selectedMarginUah').textContent = `+${formatUah(margin)}`;
-      document.getElementById('selectedMarginUsd').textContent = `~+${formatUsd(margin)} с перепродажи`;
-
-      const urls = buildMarketplaceUrls(m.name, target);
-      document.getElementById('directOlxLink').href = urls.olx;
-      document.getElementById('directShafaLink').href = urls.shafa;
-      document.getElementById('directPromLink').href = urls.prom;
-
-      renderPriceChart(m);
-      renderModelsList();
-    }
-
-    document.getElementById('toggleSelectedFavBtn').addEventListener('click', () => {
-      toggleFavorite(state.selectedModelId);
-    });
-
-    document.getElementById('quickBestDealBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      selectModel('ip14p');
-      document.getElementById('analyticsCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-
-    // Поиск и фильтры
-    const searchInput = document.getElementById('searchInput');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-    searchInput.addEventListener('input', (e) => {
-      state.searchQuery = e.target.value;
-      clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
-      renderModelsList();
-    });
-    clearSearchBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      state.searchQuery = '';
-      clearSearchBtn.classList.add('hidden');
-      renderModelsList();
-    });
-
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        triggerHaptic('light');
-        document.querySelectorAll('.filter-chip').forEach(c => {
-          c.classList.remove('active', 'bg-blue-500/80', 'text-white', 'border-blue-300/40');
-          c.classList.add('bg-white/[0.05]', 'text-slate-300', 'border-white/10');
-        });
-        chip.classList.add('active', 'bg-blue-500/80', 'text-white', 'border-blue-300/40');
-        chip.classList.remove('bg-white/[0.05]', 'text-slate-300', 'border-white/10');
-        state.filterChip = chip.dataset.chip;
-        renderModelsList();
-      });
-    });
-
-    document.querySelectorAll('.brand-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        document.querySelectorAll('.brand-btn').forEach(b => {
-          b.classList.remove('active', 'bg-blue-500/20', 'text-blue-300', 'border-blue-400/45');
-          b.classList.add('bg-white/[0.05]', 'text-slate-400', 'border-white/10');
-        });
-        btn.classList.add('active', 'bg-blue-500/20', 'text-blue-300', 'border-blue-400/45');
-        btn.classList.remove('bg-white/[0.05]', 'text-slate-400', 'border-white/10');
-        state.filterBrand = btn.dataset.brand;
-        renderModelsList();
-      });
-    });
-
-    document.querySelectorAll('.period-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        document.querySelectorAll('.period-btn').forEach(b => {
-          b.classList.remove('active', 'bg-blue-500', 'text-white');
-          b.classList.add('text-slate-400');
-        });
-        btn.classList.add('active', 'bg-blue-500', 'text-white');
-        btn.classList.remove('text-slate-400');
-        state.chartPeriod = Number(btn.dataset.period);
-        const m = SMARTPHONES.find(x => x.id === state.selectedModelId);
-        if (m) renderPriceChart(m);
-      });
-    });
-
-    // Быстрые кнопки из карточки модели в другие разделы
-    document.getElementById('sendToCalcBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      const m = SMARTPHONES.find(x => x.id === state.selectedModelId) || SMARTPHONES[0];
-      const median = Math.round((m.min + m.max) / 2);
-      document.getElementById('calcModelSelect').value = m.id;
-      document.getElementById('calcSellerPrice').value = Math.round(median * 0.89);
-      recalculateDeal();
-      switchMainTab('deals');
-      switchDealSubTab('calc');
-    });
-
-    document.getElementById('sendToCompareBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      document.getElementById('compareModelA').value = state.selectedModelId;
-      renderComparison();
-      switchMainTab('deals');
-      switchDealSubTab('compare');
-    });
-
-    document.getElementById('applyModelToRadarBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      const m = SMARTPHONES.find(x => x.id === state.selectedModelId);
-      if (!m) return;
-      const median = Math.round((m.min + m.max) / 2);
-      const target = Math.min(45000, Math.max(5000, Math.round((median * 0.88) / 500) * 500));
-
-      state.radarBudget = target;
-      document.getElementById('radarBudgetSlider').value = target;
-      state.radarBrands.clear();
-      state.radarBrands.add(m.brand);
-      syncRadarButtonsUI();
-      updateRadarBudgetUI();
-      switchMainTab('radar');
-      showToast(`Бюджет ${formatUah(target)} для ${m.name} передан в Радар`);
-    });
-
-    // ==================== ВКЛАДКА 2: ТЕРМИНАЛ СДЕЛОК ====================
-    function switchDealSubTab(subName) {
-      triggerHaptic('light');
-      state.activeDealTab = subName;
-      ['hot', 'calc', 'garage', 'compare'].forEach(t => {
-        document.getElementById(`dealtab-${t}`).classList.toggle('hidden', t !== subName);
-      });
-      document.querySelectorAll('.deal-sub-btn').forEach(btn => {
-        const isAct = btn.dataset.dealtab === subName;
-        btn.className = isAct
-          ? 'deal-sub-btn spring-press active py-2 px-1 rounded-xl text-[11px] font-bold bg-blue-500/80 text-white border border-blue-300/30 truncate'
-          : 'deal-sub-btn spring-press py-2 px-1 rounded-xl text-[11px] font-bold text-slate-400 hover:text-white truncate';
-      });
-    }
-
-    document.querySelectorAll('.deal-sub-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchDealSubTab(btn.dataset.dealtab));
-    });
-
-    // 2.1 Горячие лоты
-    const HOT_LOTS = [
-      { modelId: 'ip14p', price: 21800, source: 'OLX.ua • Киев', note: 'АКБ 87%, родной экран, коробка, срочная продажа', time: '4 мин назад' },
-      { modelId: 's23u', price: 22900, source: 'Shafa.ua • Львов', note: '12/256GB, без выгораний, чехол и блок 45W', time: '11 мин назад' },
-      { modelId: 'px8p', price: 18900, source: 'ТГ-барахолка • Днепр', note: 'Neverlock, состояние 9.5/10, без нюансов', time: '19 мин назад' },
-      { modelId: 'ip13', price: 13200, source: 'OLX.ua • Одесса', note: 'АКБ 85%, TrueTone и Face ID работают', time: '27 мин назад' },
-      { modelId: 'poco_x6p', price: 9100, source: 'OLX.ua • Харьков', note: '12/512GB, полный комплект с чеком', time: '34 мин назад' }
-    ];
-
-    function renderHotLots() {
-      const container = document.getElementById('hotLotsList');
-      container.innerHTML = HOT_LOTS.map(lot => {
-        const m = SMARTPHONES.find(x => x.id === lot.modelId) || SMARTPHONES[0];
-        const median = Math.round((m.min + m.max) / 2);
-        const profit = median - lot.price;
-        const urls = buildMarketplaceUrls(m.name, lot.price + 500);
-        return `
-          <div class="glass-panel rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <div class="flex items-center gap-1.5">
-                  <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Выгода +${formatUah(profit)}</span>
-                  <span class="text-[10px] text-slate-400">${lot.time}</span>
+        container.innerHTML = lots.map(lot => {
+          const img = lot.image || "https://via.placeholder.com/150/1e293b/94a3b8?text=OLX";
+          return `
+            <div class="lot-card">
+              <img class="lot-img" src="${img}" alt="" onerror="this.src='https://via.placeholder.com/150/1e293b/94a3b8?text=OLX'"/>
+              <div class="lot-info">
+                <div>
+                  <div class="lot-title">${lot.title}</div>
+                  <div class="lot-meta">📍 ${lot.city}</div>
                 </div>
-                <div class="text-sm font-extrabold text-white mt-1">${m.name} (${m.mem})</div>
-                <div class="text-[11px] text-slate-300 mt-0.5">${lot.note}</div>
-              </div>
-              <div class="text-right shrink-0">
-                <div class="text-base font-mono font-extrabold text-white">${formatUah(lot.price)}</div>
-                <div class="text-[11px] font-mono text-blue-400">${formatUsd(lot.price)}</div>
-                <div class="text-[10px] text-slate-400 line-through">${formatUah(median)}</div>
-              </div>
-            </div>
-            <div class="flex items-center justify-between pt-2 border-t border-white/10 gap-2">
-              <span class="text-[11px] text-slate-400 truncate">${lot.source}</span>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <button type="button" data-lot-model="${m.id}" data-lot-price="${lot.price}" class="lot-to-calc-btn spring-press px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-[11px] font-bold">
-                  🧮 В торг
-                </button>
-                <a href="${urls.olx}" target="_blank" rel="noopener noreferrer" class="spring-press px-2.5 py-1.5 rounded-xl bg-white/[0.08] border border-white/15 text-emerald-300 text-[11px] font-bold">
-                  Найти ↗
-                </a>
+                <div class="lot-bottom">
+                  <div class="lot-price">${lot.price.toLocaleString("ru-RU")} ₴</div>
+                  <div class="lot-actions">
+                    <button class="btn-sm" onclick="sendToCalc(${lot.price})">Расчёт</button>
+                    <a class="btn-sm primary" href="${lot.url}" target="_blank">OLX ↗</a>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join("");
 
-      container.querySelectorAll('.lot-to-calc-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          triggerHaptic('medium');
-          document.getElementById('calcModelSelect').value = btn.dataset.lotModel;
-          document.getElementById('calcSellerPrice').value = btn.dataset.lotPrice;
-          recalculateDeal();
-          switchDealSubTab('calc');
-        });
-      });
-    }
-
-    // 2.2 Калькулятор + Генератор торга
-    function populateModelSelects() {
-      const optionsHtml = SMARTPHONES.map(m => `<option value="${m.id}">${m.brand} ${m.name} (${m.mem})</option>`).join('');
-      document.getElementById('calcModelSelect').innerHTML = optionsHtml;
-      document.getElementById('compareModelA').innerHTML = optionsHtml;
-      document.getElementById('compareModelB').innerHTML = optionsHtml;
-      document.getElementById('calcModelSelect').value = 'ip14p';
-      document.getElementById('compareModelA').value = 'ip14p';
-      document.getElementById('compareModelB').value = 's23u';
-    }
-
-    function recalculateDeal() {
-      const modelId = document.getElementById('calcModelSelect').value;
-      const m = SMARTPHONES.find(x => x.id === modelId) || SMARTPHONES[0];
-      const sellerPrice = Math.max(1000, Number(document.getElementById('calcSellerPrice').value) || 0);
-      const median = Math.round((m.min + m.max) / 2);
-
-      let defectDeduction = 0;
-      const defectNotes = [];
-      document.querySelectorAll('.defect-chip').forEach(chip => {
-        if (state.selectedDefects.has(chip.dataset.defect)) {
-          defectDeduction += Number(chip.dataset.cost);
-          defectNotes.push(chip.dataset.label);
-        }
-      });
-
-      const realResaleValue = median - defectDeduction;
-      const netProfit = realResaleValue - sellerPrice;
-      const roi = sellerPrice > 0 ? ((netProfit / sellerPrice) * 100).toFixed(1) : '0.0';
-      const recommendedOffer = Math.max(1500, Math.round((realResaleValue * 0.87) / 100) * 100);
-
-      const profitEl = document.getElementById('calcNetProfit');
-      profitEl.textContent = (netProfit >= 0 ? '+' : '') + formatUah(netProfit);
-      profitEl.className = netProfit >= 0
-        ? 'text-sm font-mono font-extrabold text-emerald-400'
-        : 'text-sm font-mono font-extrabold text-rose-400';
-
-      document.getElementById('calcRoi').textContent = (netProfit >= 0 ? '+' : '') + roi + '%';
-      document.getElementById('calcOfferPrice').textContent = formatUah(recommendedOffer);
-
-      const verdictEl = document.getElementById('calcVerdictBadge');
-      if (netProfit >= 3000) {
-        verdictEl.textContent = '🔥 БРАТЬ СРОЧНО';
-        verdictEl.className = 'px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
-      } else if (netProfit >= 1200) {
-        verdictEl.textContent = '✅ ХОРОШИЙ ВАРИАНТ';
-        verdictEl.className = 'px-2.5 py-1 rounded-xl text-xs font-extrabold bg-blue-500/20 text-blue-300 border border-blue-400/40';
-      } else if (netProfit >= -500) {
-        verdictEl.textContent = '⚠️ ТОРГОВАТЬСЯ';
-        verdictEl.className = 'px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/40';
-      } else {
-        verdictEl.textContent = '⛔ ПЕРЕПЛАТА';
-        verdictEl.className = 'px-2.5 py-1 rounded-xl text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-400/40';
+        if (notify) showToast("Лента обновлена");
+      } catch (e) {
+        container.innerHTML = `<div class="card" style="text-align:center;color:var(--red);font-size:13px;">Не удалось подключиться к серверу на ПК. Проверьте, запущены ли radar.py и туннель.</div>`;
       }
-
-      // Генерация текста для переписки
-      const nuancesText = defectNotes.length > 0
-        ? ` Учитывая нюансы (${defectNotes.join(', ')}), потребуются вложения на приведение в порядок.`
-        : ` Средняя цена по рынку сейчас около ${formatUah(median)}.`;
-
-      const msg = state.bargainTone === 'polite'
-        ? `Здравствуйте! Заинтересовал ваш ${m.name} (${m.mem}).${nuancesText} Готов забрать через OLX Доставку или при встрече за ${formatUah(recommendedOffer)}. Если подходит — оформляю сразу!`
-        : `Добрый день! По вашему ${m.name}:${nuancesText} Реально готов забрать сегодня без лишних вопросов за ${formatUah(recommendedOffer)} наложенным платежом / при встрече. Договоримся?`;
-
-      document.getElementById('bargainMessageBox').value = msg;
     }
 
-    document.getElementById('calcModelSelect').addEventListener('change', recalculateDeal);
-    document.getElementById('calcSellerPrice').addEventListener('input', recalculateDeal);
-
-    document.querySelectorAll('.defect-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        triggerHaptic('light');
-        const id = chip.dataset.defect;
-        if (state.selectedDefects.has(id)) {
-          state.selectedDefects.delete(id);
-          chip.classList.remove('bg-blue-500/25', 'border-blue-400', 'text-white');
-          chip.classList.add('bg-white/[0.05]', 'border-white/10');
-        } else {
-          state.selectedDefects.add(id);
-          chip.classList.add('bg-blue-500/25', 'border-blue-400', 'text-white');
-          chip.classList.remove('bg-white/[0.05]', 'border-white/10');
-        }
-        recalculateDeal();
-      });
-    });
-
-    document.querySelectorAll('.bargain-tone-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        document.querySelectorAll('.bargain-tone-btn').forEach(b => {
-          b.classList.remove('active', 'bg-blue-500', 'text-white');
-          b.classList.add('bg-white/10', 'text-slate-300');
-        });
-        btn.classList.add('active', 'bg-blue-500', 'text-white');
-        btn.classList.remove('bg-white/10', 'text-slate-300');
-        state.bargainTone = btn.dataset.tone;
-        recalculateDeal();
-      });
-    });
-
-    document.getElementById('copyBargainBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
-      const textarea = document.getElementById('bargainMessageBox');
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
-      try {
-        document.execCommand('copy');
-        showToast('Текст для торга скопирован! Вставьте в чат OLX');
-      } catch (_) {
-        showToast('Выделите и скопируйте текст вручную');
-      }
-    });
-
-    // 2.3 Мой гараж (учёт сделок)
-    function saveGarage() {
-      localStorage.setItem('lotpulse_garage', JSON.stringify(state.garageDeals));
-      renderGarage();
-      updateRankAndThemeUI();
-    }
-
-    function renderGarage() {
-      let totalProfit = 0;
-      let inStockVal = 0;
-      let inStockCount = 0;
-      let soldCount = 0;
-
-      state.garageDeals.forEach(d => {
-        const cost = (Number(d.buy) || 0) + (Number(d.repair) || 0);
-        if (d.status === 'sold') {
-          soldCount++;
-          totalProfit += (Number(d.sell) || 0) - cost;
-        } else {
-          inStockCount++;
-          inStockVal += cost;
-        }
-      });
-
-      const profEl = document.getElementById('garageTotalProfit');
-      profEl.textContent = (totalProfit >= 0 ? '+' : '') + formatUah(totalProfit);
-      profEl.className = totalProfit >= 0
-        ? 'text-sm font-mono font-extrabold text-emerald-400 mt-0.5'
-        : 'text-sm font-mono font-extrabold text-rose-400 mt-0.5';
-
-      document.getElementById('garageTotalProfitUsd').textContent = `${totalProfit >= 0 ? '+' : ''}${formatUsd(totalProfit)}`;
-      document.getElementById('garageInStockVal').textContent = formatUah(inStockVal);
-      document.getElementById('garageInStockCount').textContent = `${inStockCount} шт.`;
-      document.getElementById('garageSoldCount').textContent = `${soldCount} шт.`;
-
-      const listEl = document.getElementById('garageDealsList');
-      if (state.garageDeals.length === 0) {
-        listEl.innerHTML = `<div class="glass-card rounded-2xl p-5 text-center text-xs text-slate-400">В гараже пока пусто. Запишите первую покупку или продажу выше!</div>`;
-        return;
-      }
-
-      listEl.innerHTML = state.garageDeals.map((d, i) => {
-        const cost = (Number(d.buy) || 0) + (Number(d.repair) || 0);
-        const profit = (Number(d.sell) || 0) - cost;
-        const isSold = d.status === 'sold';
-        return `
-          <div class="glass-card rounded-2xl p-3 flex items-center justify-between gap-2">
-            <div class="min-w-0">
-              <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${isSold ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
-                  ${isSold ? 'Продано' : 'В продаже'}
-                </span>
-                <span class="text-[10px] text-slate-400 font-mono">Вход: ${formatUah(cost)}</span>
-              </div>
-              <div class="text-sm font-bold text-white truncate mt-1">${d.model}</div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <div class="text-right">
-                ${isSold
-                  ? `<div class="text-xs font-mono font-extrabold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${profit >= 0 ? '+' : ''}${formatUah(profit)}</div>`
-                  : `<button type="button" data-sell-idx="${i}" class="mark-sold-btn spring-press px-2 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-[10px] font-bold text-emerald-300">Продать</button>`
-                }
-              </div>
-              <button type="button" data-del-idx="${i}" class="del-deal-btn spring-press w-7 h-7 rounded-lg bg-white/[0.06] text-slate-400 hover:text-rose-400 text-xs">✕</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      listEl.querySelectorAll('.del-deal-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          triggerHaptic('light');
-          state.garageDeals.splice(Number(btn.dataset.delIdx), 1);
-          saveGarage();
-        });
-      });
-
-      listEl.querySelectorAll('.mark-sold-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          triggerHaptic('medium');
-          const idx = Number(btn.dataset.sellIdx);
-          const item = state.garageDeals[idx];
-          if (!item) return;
-          const sellPrice = item.sell && Number(item.sell) > 0 ? Number(item.sell) : Math.round(((Number(item.buy) || 0) + (Number(item.repair) || 0)) * 1.15);
-          item.sell = sellPrice;
-          item.status = 'sold';
-          saveGarage();
-          showToast(`Сделка закрыта за ${formatUah(sellPrice)} (+50 XP)!`);
-        });
-      });
-    }
-
-    document.getElementById('addGarageDealBtn').addEventListener('click', () => {
-      const model = document.getElementById('garageModelInput').value.trim();
-      const buy = Number(document.getElementById('garageBuyInput').value);
-      const repair = Number(document.getElementById('garageRepairInput').value) || 0;
-      const sell = Number(document.getElementById('garageSellInput').value) || 0;
-      const status = document.getElementById('garageStatusSelect').value;
-
-      if (!model || !buy || buy <= 0) {
-        showToast('Укажите модель и цену покупки');
-        return;
-      }
-
-      triggerHaptic('medium');
-      state.garageDeals.unshift({ model, buy, repair, sell, status });
-      document.getElementById('garageModelInput').value = '';
-      document.getElementById('garageBuyInput').value = '';
-      document.getElementById('garageRepairInput').value = '0';
-      document.getElementById('garageSellInput').value = '';
-      saveGarage();
-      showToast(status === 'sold' ? 'Сделка добавлена (+50 XP)!' : 'Смартфон добавлен в гараж!');
-    });
-
-    // 2.4 Сравнение 2 моделей
-    function renderComparison() {
-      const a = SMARTPHONES.find(x => x.id === document.getElementById('compareModelA').value) || SMARTPHONES[0];
-      const b = SMARTPHONES.find(x => x.id === document.getElementById('compareModelB').value) || SMARTPHONES[1];
-
-      const medA = Math.round((a.min + a.max) / 2);
-      const medB = Math.round((b.min + b.max) / 2);
-      const catchA = Math.round(medA * 0.88);
-      const catchB = Math.round(medB * 0.88);
-      const marginA = medA - catchA;
-      const marginB = medB - catchB;
-
-      const rows = [
-        { label: 'Медиана рынка', valA: formatUah(medA), valB: formatUah(medB) },
-        { label: 'Ловить до (-12%)', valA: formatUah(catchA), valB: formatUah(catchB) },
-        { label: 'Потенц. маржа', valA: `+${formatUah(marginA)}`, valB: `+${formatUah(marginB)}`, winA: marginA >= marginB },
-        { label: 'Ликвидность', valA: `${a.liq}/100 (${a.days})`, valB: `${b.liq}/100 (${b.days})`, winA: a.liq >= b.liq },
-        { label: 'Падение цены', valA: `${a.trend}%`, valB: `${b.trend}%` },
-        { label: 'Платформа', valA: a.chip, valB: b.chip }
-      ];
-
-      document.getElementById('compareTableContainer').innerHTML = rows.map(r => `
-        <div class="bg-black/30 border border-white/10 rounded-2xl p-2.5">
-          <div class="text-[10px] text-center uppercase text-slate-400 font-semibold mb-1">${r.label}</div>
-          <div class="grid grid-cols-2 gap-2 text-center font-mono text-xs">
-            <div class="font-bold ${r.winA === true ? 'text-emerald-400' : 'text-white'}">${r.valA}</div>
-            <div class="font-bold ${r.winA === false ? 'text-emerald-400' : 'text-white'}">${r.valB}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('compareModelA').addEventListener('change', renderComparison);
-    document.getElementById('compareModelB').addEventListener('change', renderComparison);
-
-    // ==================== ВКЛАДКА 3: РАДАР И ЧЕК-ЛИСТ НОВОЙ ПОЧТЫ ====================
-    function syncRadarButtonsUI() {
-      document.querySelectorAll('.radar-brand-btn').forEach(btn => {
-        const active = state.radarBrands.has(btn.dataset.rbrand);
-        btn.className = active
-          ? 'radar-brand-btn spring-press active flex items-center justify-between px-3 py-2.5 rounded-2xl bg-blue-500/20 border border-blue-400/55 text-white text-xs font-semibold'
-          : 'radar-brand-btn spring-press flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold';
-        btn.querySelector('span:last-child').className = active ? 'w-2 h-2 rounded-full bg-blue-400' : 'w-2 h-2 rounded-full bg-slate-600';
-      });
-
-      document.querySelectorAll('.radar-cond-btn').forEach(btn => {
-        const active = state.radarCondition === btn.dataset.cond;
-        btn.className = active
-          ? 'radar-cond-btn spring-press active py-2 px-2 rounded-2xl bg-blue-500/20 border border-blue-400/55 text-blue-300 text-xs font-semibold text-center'
-          : 'radar-cond-btn spring-press py-2 px-2 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold text-center';
-      });
-
-      document.querySelectorAll('.radar-source-btn').forEach(btn => {
-        const active = state.radarSources.has(btn.dataset.source);
-        btn.className = active
-          ? 'radar-source-btn spring-press active px-3 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-400/50 text-emerald-300 text-xs font-semibold flex items-center justify-between'
-          : 'radar-source-btn spring-press px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-400 text-xs font-semibold flex items-center justify-between';
-        btn.querySelector('span:last-child').textContent = active ? '✓' : '+';
-      });
-    }
-
-    function updateRadarBudgetUI() {
-      document.getElementById('radarBudgetUah').textContent = formatUah(state.radarBudget);
-      document.getElementById('radarBudgetUsd').textContent = `~${formatUsd(state.radarBudget)}`;
-    }
-
-    document.querySelectorAll('.radar-brand-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        const b = btn.dataset.rbrand;
-        if (state.radarBrands.has(b) && state.radarBrands.size > 1) state.radarBrands.delete(b);
-        else state.radarBrands.add(b);
-        syncRadarButtonsUI();
-      });
-    });
-
-    document.querySelectorAll('.radar-cond-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        state.radarCondition = btn.dataset.cond;
-        syncRadarButtonsUI();
-      });
-    });
-
-    document.querySelectorAll('.radar-source-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        const s = btn.dataset.source;
-        if (state.radarSources.has(s) && state.radarSources.size > 1) state.radarSources.delete(s);
-        else state.radarSources.add(s);
-        syncRadarButtonsUI();
-      });
-    });
-
-    document.getElementById('radarBudgetSlider').addEventListener('input', e => {
-      state.radarBudget = Number(e.target.value);
-      updateRadarBudgetUI();
-    });
-
-    document.querySelectorAll('.budget-preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        state.radarBudget = Number(btn.dataset.preset);
-        document.getElementById('radarBudgetSlider').value = state.radarBudget;
-        updateRadarBudgetUI();
-      });
-    });
-
-    document.getElementById('saveRadarBtn').addEventListener('click', () => {
-      triggerHaptic('medium');
+    async function saveRadar() {
       const payload = {
-        action: 'set_radar_filters',
-        brands: Array.from(state.radarBrands),
-        condition: state.radarCondition,
-        sources: Array.from(state.radarSources),
-        maxBudgetUah: state.radarBudget,
-        usdRate: state.usdRate
+        query: document.getElementById("fQuery").value.trim() || "Google Pixel",
+        min_price: parseInt(document.getElementById("fMin").value) || 1000,
+        max_price: parseInt(document.getElementById("fMax").value) || 20000,
+        condition: document.getElementById("fCondition").value,
+        active: true
       };
-      if (tg && tg.sendData) {
-        try { tg.sendData(JSON.stringify(payload)); } catch (_) {}
-      }
-      showToast(`Фильтры переданы боту: до ${formatUah(state.radarBudget)}`);
-    });
 
-    // Интерактивный чек-лист осмотра на Новой Почте
-    const CHECKLISTS = {
-      ios: [
-        'Сверить IMEI в «Настройки → Основные → Об этом устройстве» и на лотке SIM',
-        'Проверить отсутствие привязки Apple ID / iCloud и MDM-профиля',
-        'Состояние аккумулятора (85%+) и отсутствие предупреждений о замене деталей',
-        'Работа True Tone в шторке яркости (признак оригинального дисплея)',
-        'Тест Face ID / Touch ID — регистрация лица/пальца без ошибок',
-        'Проверка всех камер (0.5x, 1x, 3x) на белом фоне на предмет пятен/пыли',
-        'Проверка обеих динамиков (верхний разговорный + нижний) и микрофонов',
-        'Вставить свою SIM-карту: проверка сети LTE, Wi-Fi, Bluetooth и NFC',
-        'Осмотр болтиков у разъёма Lightning/Type-C на следы вскрытия и влаги',
-        'Проверка работы зарядки и всех физических кнопок + переключателя звука'
-      ],
-      android: [
-        'Набрать *#06# и сверить IMEI с коробкой и настройками телефона',
-        'Проверить выход из Google-аккаунта и Samsung / Mi Account (FRP Lock)',
-        'Набрать *#0*# (для Samsung) — тест сенсора, битых пикселей и выгорания AMOLED',
-        'Проверка сканера отпечатков пальцев в экране и разблокировки по лицу',
-        'Тест всех модулей камеры (ширик, основа, телевик) и автофокуса',
-        'Вставить SIM-карту: проверка 4G/5G, звонка, датчика приближения у уха',
-        'Проверка Wi-Fi, Bluetooth, GPS и бесконтактной оплаты NFC',
-        'Осмотр зазоров между крышкой и рамкой (не отклеивается ли после ремонта)',
-        'Проверка разъёма Type-C (кабель не должен люфтить, быстрая зарядка)',
-        'Проверка громкости стереодинамиков и вибромотора'
-      ]
-    };
-
-    function renderChecklist() {
-      const steps = CHECKLISTS[state.checklistOs];
-      const container = document.getElementById('checklistItemsContainer');
-      const done = state.checkedSteps.size;
-      document.getElementById('checklistProgressText').textContent = `${done} / ${steps.length}`;
-      document.getElementById('checklistProgressBar').style.width = `${(done / steps.length) * 100}%`;
-
-      container.innerHTML = steps.map((text, idx) => {
-        const checked = state.checkedSteps.has(idx);
-        return `
-          <button type="button" data-step-idx="${idx}" class="check-step-btn spring-press w-full text-left p-2.5 rounded-2xl border flex items-start gap-2.5 transition ${checked ? 'bg-emerald-500/15 border-emerald-400/40 text-slate-300' : 'bg-black/25 border-white/10 text-slate-200'}">
-            <span class="w-5 h-5 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold mt-0.5 ${checked ? 'bg-emerald-500 text-slate-950' : 'bg-white/10 text-slate-400'}">
-              ${checked ? '✓' : idx + 1}
-            </span>
-            <span class="text-xs leading-snug ${checked ? 'line-through opacity-75' : ''}">${text}</span>
-          </button>
-        `;
-      }).join('');
-
-      container.querySelectorAll('.check-step-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          triggerHaptic('light');
-          const idx = Number(btn.dataset.stepIdx);
-          if (state.checkedSteps.has(idx)) state.checkedSteps.delete(idx);
-          else state.checkedSteps.add(idx);
-          renderChecklist();
-          if (state.checkedSteps.size === steps.length) {
-            showToast('✅ Все 10 пунктов проверены! Смартфон можно забирать');
-          }
+      showToast("Сканирую OLX...");
+      try {
+        const res = await fetch(API_BASE + "/api/filters", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-      });
+        const data = await res.json();
+        showToast(`Готово! Найдено новых: ${data.added_now}`);
+        await checkStatus();
+        await loadLots(false);
+        switchTab("feed", document.querySelectorAll(".nav-btn")[0]);
+      } catch (e) {
+        showToast("Ошибка связи с ПК");
+      }
     }
 
-    document.querySelectorAll('.os-check-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        triggerHaptic('light');
-        document.querySelectorAll('.os-check-btn').forEach(b => {
-          b.classList.remove('active', 'bg-blue-500', 'text-white');
-          b.classList.add('text-slate-400');
-        });
-        btn.classList.add('active', 'bg-blue-500', 'text-white');
-        btn.classList.remove('text-slate-400');
-        state.checklistOs = btn.dataset.os;
-        state.checkedSteps.clear();
-        renderChecklist();
-      });
-    });
-
-    document.getElementById('resetChecklistBtn').addEventListener('click', () => {
-      triggerHaptic('light');
-      state.checkedSteps.clear();
-      renderChecklist();
-    });
-
-    // ==================== НАВИГАЦИЯ И СКОЛЬЗЯЩАЯ КАПСУЛА ====================
-    function updateDockPillPosition(tabName) {
-      const pill = document.getElementById('dockActivePill');
-      const activeBtn = document.querySelector(`.nav-tab-btn[data-tab="${tabName}"]`);
-      if (!pill || !activeBtn) return;
-      pill.style.width = `${activeBtn.offsetWidth}px`;
-      pill.style.transform = `translate3d(${activeBtn.offsetLeft - 6}px, 0, 0)`;
+    function sendToCalc(price) {
+      document.getElementById("cBuy").value = price;
+      document.getElementById("cSell").value = Math.round(price * 1.35 / 100) * 100;
+      recalc();
+      switchTab("calc", document.querySelectorAll(".nav-btn")[2]);
     }
 
-    function pauseAllActiveGames() {
-      if (tetrisGame && tetrisGame.running && !tetrisGame.paused) tetrisGame.togglePause(true);
-      if (snakeGame && snakeGame.running && !snakeGame.paused) snakeGame.togglePause(true);
+    function recalc() {
+      const buy = parseFloat(document.getElementById("cBuy").value) || 0;
+      const sell = parseFloat(document.getElementById("cSell").value) || 0;
+      let repairs = 0;
+      document.querySelectorAll("#tab-calc input[type='checkbox']:checked").forEach(cb => {
+        repairs += parseFloat(cb.dataset.cost) || 0;
+      });
+      const profit = sell - buy - repairs;
+      const maxBuy = Math.max(0, sell - repairs - 2500);
+
+      const pEl = document.getElementById("cProfit");
+      pEl.textContent = (profit >= 0 ? "+" : "") + profit.toLocaleString("ru-RU") + " ₴";
+      pEl.style.color = profit >= 0 ? "var(--green)" : "var(--red)";
+      document.getElementById("cMaxBuy").textContent = maxBuy.toLocaleString("ru-RU") + " ₴";
     }
 
-    function switchMainTab(tabName) {
-      triggerHaptic('light');
-      if (state.activeTab === 'games' && tabName !== 'games') pauseAllActiveGames();
-      state.activeTab = tabName;
-
-      ['market', 'deals', 'radar', 'games'].forEach(t => {
-        const el = document.getElementById(`tab-${t}`);
-        if (t === tabName) {
-          el.classList.remove('hidden', 'tab-animate');
-          void el.offsetWidth;
-          el.classList.add('tab-animate');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-
-      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-        const isActive = btn.dataset.tab === tabName;
-        btn.className = isActive
-          ? 'nav-tab-btn active flex flex-col items-center justify-center py-2 rounded-2xl text-blue-300 transition-colors'
-          : 'nav-tab-btn flex flex-col items-center justify-center py-2 rounded-2xl text-slate-400 hover:text-slate-200 transition-colors';
-      });
-
-      updateDockPillPosition(tabName);
-      if (tabName === 'games') resizeGameCanvases();
-    }
-
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchMainTab(btn.dataset.tab));
-    });
-
-    function switchMiniGame(gameName) {
-      triggerHaptic('light');
-      pauseAllActiveGames();
-      state.activeGame = gameName;
-      ['tetris', 'snake', 'ttt'].forEach(g => {
-        document.getElementById(`game-${g}`).classList.toggle('hidden', g !== gameName);
-      });
-      document.querySelectorAll('.game-switch-btn').forEach(btn => {
-        const isActive = btn.dataset.game === gameName;
-        btn.className = isActive
-          ? 'game-switch-btn spring-press active py-2 px-2 rounded-xl text-xs font-bold bg-blue-500/80 text-white border border-blue-300/30 shadow-md'
-          : 'game-switch-btn spring-press py-2 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white';
-      });
-      resizeGameCanvases();
-    }
-
-    document.querySelectorAll('.game-switch-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchMiniGame(btn.dataset.game));
-    });
-
-    // ==================== МИНИ-ИГРА 1: ТЕТРИС ====================
-    const tetrisGame = (() => {
-      const COLS = 10, ROWS = 20;
-      const canvas = document.getElementById('tetrisCanvas');
-      const ctx = canvas.getContext('2d');
-      const nextCanvas = document.getElementById('tetrisNextCanvas');
-      const nextCtx = nextCanvas.getContext('2d');
-      const overlay = document.getElementById('tetrisOverlay');
-      const overlayTitle = document.getElementById('tetrisOverlayTitle');
-      const overlaySub = document.getElementById('tetrisOverlaySub');
-      const startPauseBtn = document.getElementById('tetrisStartPauseBtn');
-
-      const SHAPES = {
-        I: { color: '#38BDF8', matrix: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] },
-        J: { color: '#3B82F6', matrix: [[1,0,0],[1,1,1],[0,0,0]] },
-        L: { color: '#F59E0B', matrix: [[0,0,1],[1,1,1],[0,0,0]] },
-        O: { color: '#FACC15', matrix: [[1,1],[1,1]] },
-        S: { color: '#10B981', matrix: [[0,1,1],[1,1,0],[0,0,0]] },
-        T: { color: '#A855F7', matrix: [[0,1,0],[1,1,1],[0,0,0]] },
-        Z: { color: '#F43F5E', matrix: [[1,1,0],[0,1,1],[0,0,0]] }
-      };
-      const KEYS = Object.keys(SHAPES);
-
-      let board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-      let blockSize = 18, current = null, nextPiece = null;
-      let score = 0, lines = 0, level = 1;
-      let best = Number(localStorage.getItem('lotpulse_tetris_best') || 0);
-      let running = false, paused = false, gameOver = false;
-      let dropTimer = 0, lastTime = 0, animId = null;
-
-      document.getElementById('tetrisBest').textContent = best;
-
-      function createPiece() {
-        const key = KEYS[Math.floor(Math.random() * KEYS.length)];
-        const t = SHAPES[key];
-        const matrix = t.matrix.map(r => [...r]);
-        return { matrix, color: t.color, x: Math.floor((COLS - matrix[0].length) / 2), y: 0 };
-      }
-
-      function resize() {
-        const wrapper = document.getElementById('tetrisCanvasWrapper');
-        if (!wrapper) return;
-        const availW = Math.max(150, wrapper.clientWidth - 12);
-        blockSize = Math.floor(availW / COLS);
-        canvas.width = blockSize * COLS;
-        canvas.height = blockSize * ROWS;
-        draw();
-        drawNext();
-      }
-
-      function collide(piece, offX = 0, offY = 0, testMatrix = piece.matrix) {
-        for (let r = 0; r < testMatrix.length; r++) {
-          for (let c = 0; c < testMatrix[r].length; c++) {
-            if (!testMatrix[r][c]) continue;
-            const nx = piece.x + c + offX;
-            const ny = piece.y + r + offY;
-            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
-            if (ny >= 0 && board[ny][nx]) return true;
-          }
-        }
-        return false;
-      }
-
-      function rotateMatrix(mat) {
-        const N = mat.length;
-        const res = Array.from({ length: N }, () => Array(N).fill(0));
-        for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) res[c][N - 1 - r] = mat[r][c];
-        return res;
-      }
-
-      function rotateCurrent() {
-        if (!running || paused || !current) return;
-        const rotated = rotateMatrix(current.matrix);
-        for (const k of [0, -1, 1, -2, 2]) {
-          if (!collide(current, k, 0, rotated)) {
-            current.matrix = rotated;
-            current.x += k;
-            draw();
-            return;
-          }
-        }
-      }
-
-      function moveHorizontal(dir) {
-        if (!running || paused || !current) return;
-        if (!collide(current, dir, 0)) { current.x += dir; draw(); }
-      }
-
-      function softDrop() {
-        if (!running || paused || !current) return;
-        if (!collide(current, 0, 1)) { current.y++; score += 1; updateStats(); }
-        else lockPiece();
-        draw();
-      }
-
-      function hardDrop() {
-        if (!running || paused || !current) return;
-        let dropped = 0;
-        while (!collide(current, 0, 1)) { current.y++; dropped++; }
-        score += dropped * 2;
-        lockPiece();
-        updateStats();
-        draw();
-      }
-
-      function lockPiece() {
-        for (let r = 0; r < current.matrix.length; r++) {
-          for (let c = 0; c < current.matrix[r].length; c++) {
-            if (!current.matrix[r][c]) continue;
-            if (current.y + r < 0) { endGame(); return; }
-            board[current.y + r][current.x + c] = current.color;
-          }
-        }
-        clearLines();
-        current = nextPiece || createPiece();
-        nextPiece = createPiece();
-        drawNext();
-        if (collide(current, 0, 0)) endGame();
-      }
-
-      function clearLines() {
-        let cleared = 0;
-        for (let r = ROWS - 1; r >= 0; r--) {
-          if (board[r].every(cell => cell !== null)) {
-            board.splice(r, 1);
-            board.unshift(Array(COLS).fill(null));
-            cleared++;
-            r++;
-          }
-        }
-        if (cleared > 0) {
-          score += ([0, 100, 300, 500, 800][cleared] || 800) * level;
-          lines += cleared;
-          level = Math.floor(lines / 10) + 1;
-          updateStats();
-        }
-      }
-
-      function updateStats() {
-        document.getElementById('tetrisScore').textContent = score;
-        document.getElementById('tetrisLines').textContent = lines;
-        document.getElementById('tetrisLevel').textContent = level;
-        if (score > best) {
-          best = score;
-          localStorage.setItem('lotpulse_tetris_best', String(best));
-          document.getElementById('tetrisBest').textContent = best;
-          updateRankAndThemeUI();
-        }
-      }
-
-      function drawCell(context, x, y, size, color, isGhost = false) {
-        const px = x * size, py = y * size;
-        if (isGhost) {
-          context.strokeStyle = color;
-          context.globalAlpha = 0.35;
-          context.lineWidth = 1.5;
-          context.strokeRect(px + 2, py + 2, size - 4, size - 4);
-          context.globalAlpha = 1;
-          return;
-        }
-        context.fillStyle = color;
-        context.beginPath();
-        context.roundRect(px + 1, py + 1, size - 2, size - 2, 4);
-        context.fill();
-        context.fillStyle = 'rgba(255,255,255,0.22)';
-        context.fillRect(px + 3, py + 2, size - 6, 3);
-      }
-
-      function draw() {
-        ctx.fillStyle = '#07090D';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
-        ctx.lineWidth = 1;
-        for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(c * blockSize, 0); ctx.lineTo(c * blockSize, canvas.height); ctx.stroke(); }
-        for (let r = 1; r < ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, r * blockSize); ctx.lineTo(canvas.width, r * blockSize); ctx.stroke(); }
-        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (board[r][c]) drawCell(ctx, c, r, blockSize, board[r][c]);
-        if (current) {
-          let ghostY = current.y;
-          while (!collide(current, 0, ghostY - current.y + 1)) ghostY++;
-          for (let r = 0; r < current.matrix.length; r++) {
-            for (let c = 0; c < current.matrix[r].length; c++) {
-              if (!current.matrix[r][c]) continue;
-              if (ghostY + r >= 0) drawCell(ctx, current.x + c, ghostY + r, blockSize, current.color, true);
-              if (current.y + r >= 0) drawCell(ctx, current.x + c, current.y + r, blockSize, current.color, false);
-            }
-          }
-        }
-      }
-
-      function drawNext() {
-        nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-        if (!nextPiece) return;
-        const m = nextPiece.matrix, size = 15;
-        const offsetX = Math.floor((nextCanvas.width - m[0].length * size) / 2);
-        const offsetY = Math.floor((nextCanvas.height - m.length * size) / 2);
-        for (let r = 0; r < m.length; r++) {
-          for (let c = 0; c < m[r].length; c++) {
-            if (m[r][c]) {
-              nextCtx.fillStyle = nextPiece.color;
-              nextCtx.beginPath();
-              nextCtx.roundRect(offsetX + c * size + 1, offsetY + r * size + 1, size - 2, size - 2, 3);
-              nextCtx.fill();
-            }
-          }
-        }
-      }
-
-      function loop(time = 0) {
-        if (!running || paused) return;
-        dropTimer += time - lastTime;
-        lastTime = time;
-        const speed = Math.max(110, 750 - (level - 1) * 65);
-        if (dropTimer >= speed) {
-          dropTimer = 0;
-          if (!collide(current, 0, 1)) current.y++;
-          else lockPiece();
-          draw();
-        }
-        animId = requestAnimationFrame(loop);
-      }
-
-      function startNew() {
-        board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-        score = 0; lines = 0; level = 1; gameOver = false; paused = false; running = true;
-        current = createPiece(); nextPiece = createPiece();
-        updateStats(); drawNext();
-        overlay.classList.add('hidden');
-        startPauseBtn.textContent = 'Пауза';
-        lastTime = performance.now(); dropTimer = 0;
-        cancelAnimationFrame(animId);
-        animId = requestAnimationFrame(loop);
-        draw();
-      }
-
-      function endGame() {
-        running = false; gameOver = true; cancelAnimationFrame(animId);
-        overlayTitle.textContent = 'ИГРА ОКОНЧЕНА';
-        overlaySub.textContent = `Счёт: ${score} • Нажмите «Заново»`;
-        overlay.classList.remove('hidden');
-        startPauseBtn.textContent = 'Заново';
-      }
-
-      function togglePause(forcePause = null) {
-        if (!running || gameOver) { startNew(); return; }
-        paused = forcePause !== null ? forcePause : !paused;
-        if (paused) {
-          cancelAnimationFrame(animId);
-          overlayTitle.textContent = 'ПАУЗА';
-          overlaySub.textContent = 'Нажмите «Продолжить»';
-          overlay.classList.remove('hidden');
-          startPauseBtn.textContent = 'Продолжить';
-        } else {
-          overlay.classList.add('hidden');
-          startPauseBtn.textContent = 'Пауза';
-          lastTime = performance.now();
-          animId = requestAnimationFrame(loop);
-        }
-      }
-
-      startPauseBtn.addEventListener('click', () => { if (!running || gameOver) startNew(); else togglePause(); });
-      document.getElementById('tLeftBtn').addEventListener('click', () => moveHorizontal(-1));
-      document.getElementById('tRightBtn').addEventListener('click', () => moveHorizontal(1));
-      document.getElementById('tRotateBtn').addEventListener('click', () => rotateCurrent());
-      document.getElementById('tSoftDropBtn').addEventListener('click', () => softDrop());
-      document.getElementById('tHardDropBtn').addEventListener('click', () => hardDrop());
-
-      let touchStartX = 0, touchStartY = 0;
-      canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; } }, { passive: true });
-      canvas.addEventListener('touchend', e => {
-        if (!running || paused || e.changedTouches.length === 0) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        const dy = e.changedTouches[0].clientY - touchStartY;
-        if (Math.abs(dx) < 14 && Math.abs(dy) < 14) { rotateCurrent(); return; }
-        if (Math.abs(dx) > Math.abs(dy)) moveHorizontal(dx > 0 ? 1 : -1);
-        else if (dy > 35) hardDrop();
-        else if (dy > 14) softDrop();
-      }, { passive: true });
-
-      return { get running() { return running; }, get paused() { return paused; }, resize, togglePause, moveHorizontal, rotateCurrent, softDrop, hardDrop };
-    })();
-
-    // ==================== МИНИ-ИГРА 2: ЗМЕЙКА ====================
-    const snakeGame = (() => {
-      const GRID = 18;
-      const canvas = document.getElementById('snakeCanvas');
-      const ctx = canvas.getContext('2d');
-      const overlay = document.getElementById('snakeOverlay');
-      const overlayTitle = document.getElementById('snakeOverlayTitle');
-      const overlaySub = document.getElementById('snakeOverlaySub');
-      const startPauseBtn = document.getElementById('snakeStartPauseBtn');
-      const speedBtn = document.getElementById('snakeSpeedBtn');
-
-      let cell = 15, snake = [], dir = { x: 1, y: 0 }, nextDir = { x: 1, y: 0 }, food = { x: 10, y: 10 };
-      let score = 0, best = Number(localStorage.getItem('lotpulse_snake_best') || 0);
-      let turbo = false, running = false, paused = false, timer = null;
-
-      document.getElementById('snakeBest').textContent = best;
-
-      function resize() {
-        const wrapper = document.getElementById('snakeCanvasWrapper');
-        if (!wrapper) return;
-        const size = Math.min(wrapper.clientWidth - 16, 290);
-        cell = Math.max(12, Math.floor(size / GRID));
-        canvas.width = cell * GRID;
-        canvas.height = cell * GRID;
-        draw();
-      }
-
-      function spawnFood() {
-        while (true) {
-          const fx = Math.floor(Math.random() * GRID), fy = Math.floor(Math.random() * GRID);
-          if (!snake.some(s => s.x === fx && s.y === fy)) { food = { x: fx, y: fy }; break; }
-        }
-      }
-
-      function startNew() {
-        snake = [{ x: 6, y: 9 }, { x: 5, y: 9 }, { x: 4, y: 9 }];
-        dir = { x: 1, y: 0 }; nextDir = { x: 1, y: 0 }; score = 0;
-        document.getElementById('snakeScore').textContent = 0;
-        spawnFood(); running = true; paused = false;
-        overlay.classList.add('hidden');
-        startPauseBtn.textContent = 'Пауза';
-        restartLoop(); draw();
-      }
-
-      function restartLoop() {
-        clearInterval(timer);
-        if (!running || paused) return;
-        timer = setInterval(step, turbo ? 85 : 145);
-      }
-
-      function step() {
-        dir = nextDir;
-        const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-        if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID || snake.some(s => s.x === head.x && s.y === head.y)) {
-          running = false; clearInterval(timer);
-          overlayTitle.textContent = 'СТОЛКНОВЕНИЕ';
-          overlaySub.textContent = `Счёт: ${score} • Нажмите «Заново»`;
-          overlay.classList.remove('hidden');
-          startPauseBtn.textContent = 'Заново';
-          return;
-        }
-        snake.unshift(head);
-        if (head.x === food.x && head.y === food.y) {
-          score += turbo ? 15 : 10;
-          document.getElementById('snakeScore').textContent = score;
-          if (score > best) {
-            best = score;
-            localStorage.setItem('lotpulse_snake_best', String(best));
-            document.getElementById('snakeBest').textContent = best;
-            updateRankAndThemeUI();
-          }
-          spawnFood();
-        } else {
-          snake.pop();
-        }
-        draw();
-      }
-
-      function draw() {
-        ctx.fillStyle = '#07090D';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#10B981';
-        ctx.beginPath();
-        ctx.arc(food.x * cell + cell / 2, food.y * cell + cell / 2, cell * 0.36, 0, Math.PI * 2);
-        ctx.fill();
-        snake.forEach((seg, idx) => {
-          ctx.fillStyle = idx === 0 ? '#60A5FA' : '#2563EB';
-          ctx.beginPath();
-          ctx.roundRect(seg.x * cell + 1, seg.y * cell + 1, cell - 2, cell - 2, 4);
-          ctx.fill();
-        });
-      }
-
-      function setDirection(d) {
-        if (!running || paused) return;
-        if (d === 'UP' && dir.y !== 1) nextDir = { x: 0, y: -1 };
-        if (d === 'DOWN' && dir.y !== -1) nextDir = { x: 0, y: 1 };
-        if (d === 'LEFT' && dir.x !== 1) nextDir = { x: -1, y: 0 };
-        if (d === 'RIGHT' && dir.x !== -1) nextDir = { x: 1, y: 0 };
-      }
-
-      function togglePause(forcePause = null) {
-        if (!running) { startNew(); return; }
-        paused = forcePause !== null ? forcePause : !paused;
-        if (paused) {
-          clearInterval(timer);
-          overlayTitle.textContent = 'ПАУЗА';
-          overlaySub.textContent = 'Нажмите «Продолжить»';
-          overlay.classList.remove('hidden');
-          startPauseBtn.textContent = 'Продолжить';
-        } else {
-          overlay.classList.add('hidden');
-          startPauseBtn.textContent = 'Пауза';
-          restartLoop();
-        }
-      }
-
-      startPauseBtn.addEventListener('click', () => { if (!running) startNew(); else togglePause(); });
-      speedBtn.addEventListener('click', () => {
-        turbo = !turbo;
-        speedBtn.textContent = turbo ? '⚡ Турбо' : 'Обычная';
-        if (running && !paused) restartLoop();
-      });
-      document.querySelectorAll('.snake-dir-btn').forEach(btn => btn.addEventListener('click', () => setDirection(btn.dataset.sdir)));
-
-      let sx = 0, sy = 0;
-      canvas.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
-      canvas.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
-        if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
-        if (Math.abs(dx) > Math.abs(dy)) setDirection(dx > 0 ? 'RIGHT' : 'LEFT');
-        else setDirection(dy > 0 ? 'DOWN' : 'UP');
-      }, { passive: true });
-
-      return { get running() { return running; }, get paused() { return paused; }, resize, togglePause, setDirection };
-    })();
-
-    // ==================== МИНИ-ИГРА 3: КРЕСТИКИ-НОЛИКИ ====================
-    (() => {
-      const boardEl = document.getElementById('tttBoard');
-      const statusEl = document.getElementById('tttStatus');
-      let cells = Array(9).fill(''), currentPlayer = 'X', mode = 'ai', finished = false;
-      let scores = { X: 0, O: 0, D: 0 };
-      const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-
-      function checkWin(b) {
-        for (const line of WIN_LINES) {
-          const [a, c, d] = line;
-          if (b[a] && b[a] === b[c] && b[a] === b[d]) return { winner: b[a], line };
-        }
-        if (b.every(v => v !== '')) return { winner: 'D', line: [] };
-        return null;
-      }
-
-      function renderBoard(winLine = []) {
-        boardEl.innerHTML = cells.map((val, i) => {
-          const isWin = winLine.includes(i);
-          const colorClass = val === 'X' ? 'text-blue-400' : 'text-emerald-400';
-          const bgClass = isWin ? 'bg-blue-600/25 border-blue-400' : 'bg-slate-950/85 border-slate-800 hover:border-slate-700';
-          return `<button type="button" data-idx="${i}" class="ttt-cell rounded-2xl border ${bgClass} flex items-center justify-center text-3xl font-extrabold ${colorClass} transition active:scale-95">${val}</button>`;
-        }).join('');
-        boardEl.querySelectorAll('.ttt-cell').forEach(btn => btn.addEventListener('click', () => handleMove(Number(btn.dataset.idx))));
-      }
-
-      function aiBestMove() {
-        for (const mark of ['O', 'X']) {
-          for (let i = 0; i < 9; i++) {
-            if (!cells[i]) {
-              cells[i] = mark;
-              const res = checkWin(cells);
-              cells[i] = '';
-              if (res && res.winner === mark) return i;
-            }
-          }
-        }
-        if (!cells[4]) return 4;
-        const empty = cells.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-        return empty[Math.floor(Math.random() * empty.length)];
-      }
-
-      function handleMove(idx) {
-        if (finished || cells[idx]) return;
-        cells[idx] = currentPlayer;
-        const res = checkWin(cells);
-        if (res) {
-          finished = true;
-          if (res.winner === 'D') {
-            scores.D++;
-            document.getElementById('tttScoreD').textContent = scores.D;
-            statusEl.textContent = 'Ничья!';
-          } else {
-            scores[res.winner]++;
-            document.getElementById(`tttScore${res.winner}`).textContent = scores[res.winner];
-            if (res.winner === 'X') {
-              state.bonusXp += 15;
-              localStorage.setItem('lotpulse_bonus_xp', String(state.bonusXp));
-              updateRankAndThemeUI();
-            }
-            statusEl.textContent = res.winner === 'X' ? 'Победил игрок X (+15 XP)!' : (mode === 'ai' ? 'Победил ИИ (O)!' : 'Победил игрок O!');
-          }
-          renderBoard(res.line);
-          return;
-        }
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        statusEl.textContent = mode === 'ai' && currentPlayer === 'O' ? 'Ход ИИ...' : `Ход игрока (${currentPlayer})`;
-        renderBoard();
-        if (mode === 'ai' && currentPlayer === 'O' && !finished) {
-          setTimeout(() => { const move = aiBestMove(); if (move !== undefined) handleMove(move); }, 260);
-        }
-      }
-
-      function resetGame() {
-        cells = Array(9).fill(''); currentPlayer = 'X'; finished = false;
-        statusEl.textContent = 'Ваш ход (X)';
-        renderBoard();
-      }
-
-      document.getElementById('tttResetBtn').addEventListener('click', resetGame);
-      document.querySelectorAll('.ttt-mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.ttt-mode-btn').forEach(b => { b.classList.remove('active', 'bg-blue-500', 'text-white'); b.classList.add('text-slate-400'); });
-          btn.classList.add('active', 'bg-blue-500', 'text-white'); btn.classList.remove('text-slate-400');
-          mode = btn.dataset.tttmode;
-          document.getElementById('tttLabelO').textContent = mode === 'ai' ? 'ИИ (O)' : 'Игрок O';
-          scores = { X: 0, O: 0, D: 0 };
-          document.getElementById('tttScoreX').textContent = 0;
-          document.getElementById('tttScoreO').textContent = 0;
-          document.getElementById('tttScoreD').textContent = 0;
-          resetGame();
-        });
-      });
-
-      renderBoard();
-    })();
-
-    // ==================== РЕСАЙЗ, КЛАВИАТУРА И ЗАПУСК ====================
-    function resizeGameCanvases() {
-      tetrisGame.resize();
-      snakeGame.resize();
-    }
-
-    window.addEventListener('resize', () => {
-      resizeGameCanvases();
-      updateDockPillPosition(state.activeTab);
-    });
-
-    window.addEventListener('keydown', e => {
-      if (state.activeTab !== 'games') return;
-      if (state.activeGame === 'tetris') {
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
-        if (e.key === 'ArrowLeft') tetrisGame.moveHorizontal(-1);
-        else if (e.key === 'ArrowRight') tetrisGame.moveHorizontal(1);
-        else if (e.key === 'ArrowUp') tetrisGame.rotateCurrent();
-        else if (e.key === 'ArrowDown') tetrisGame.softDrop();
-        else if (e.key === ' ') tetrisGame.hardDrop();
-      } else if (state.activeGame === 'snake') {
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
-        if (e.key === 'ArrowUp') snakeGame.setDirection('UP');
-        else if (e.key === 'ArrowDown') snakeGame.setDirection('DOWN');
-        else if (e.key === 'ArrowLeft') snakeGame.setDirection('LEFT');
-        else if (e.key === 'ArrowRight') snakeGame.setDirection('RIGHT');
-      }
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-      populateModelSelects();
-      selectModel('ip14p');
-      renderModelsList();
-      renderHotLots();
-      recalculateDeal();
-      renderGarage();
-      renderComparison();
-      renderChecklist();
-      updateRadarBudgetUI();
-      updateRankAndThemeUI();
-      resizeGameCanvases();
-      updateDockPillPosition('market');
-      fetchExchangeRates();
-      tryLoadExternalPrices();
-    });
+    checkStatus();
+    loadLots(false);
+    recalc();
+    setInterval(loadLots, 30000);
   </script>
 </body>
 </html>
