@@ -1,1355 +1,1390 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LotPulse Pro — Терминал перекупщика</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      --bg: #06080d;
-      --glass: rgba(255, 255, 255, 0.06);
-      --glass-strong: rgba(255, 255, 255, 0.13);
-      --border: rgba(255, 255, 255, 0.13);
-      --border-light: rgba(255, 255, 255, 0.25);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.35);
-      --green: #34d399;
-      --red: #fb7185;
-      --amber: #fbbf24;
-      --purple: #a78bfa;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background:
-        radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.18) 0%, transparent 42%),
-        radial-gradient(circle at 88% 20%, rgba(52, 211, 153, 0.12) 0%, transparent 42%),
-        linear-gradient(180deg, #0b111e 0%, #06080d 100%);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: 125px;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 14px;
-    }
-
-    /* Glass Modal */
-    .pin-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 7, 13, 0.92);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      z-index: 999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.22s ease;
-    }
-    .pin-overlay.open {
-      display: flex;
-    }
-    .pin-box {
-      width: 100%;
-      max-width: 400px;
-      background: rgba(18, 25, 40, 0.95);
-      border: 1px solid var(--border-light);
-      border-radius: 26px;
-      padding: 22px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      padding: 12px 14px;
-      background: var(--glass);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--border);
-      border-top-color: var(--border-light);
-      border-radius: 22px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .logo-badge {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #38bdf8, #0284c7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 13px;
-      color: #03111a;
-      box-shadow: 0 0 16px var(--accent-glow);
-    }
-
-    .brand h1 {
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .lang-btn {
-      padding: 5px 9px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11.5px;
-      font-weight: 600;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border);
-      cursor: pointer;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--amber);
-    }
-    .status-indicator.online {
-      background: var(--green);
-      box-shadow: 0 0 10px var(--green);
-    }
-    .status-indicator.offline {
-      background: var(--red);
-    }
-
-    .card {
-      background: var(--glass);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      border: 1px solid var(--border);
-      border-top-color: var(--border-light);
-      border-radius: 22px;
-      padding: 15px;
-      margin-bottom: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 11px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .tab-content {
-      display: none;
-      animation: slideUp 0.22s ease;
-    }
-    .tab-content.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .source-tabs {
-      display: flex;
-      gap: 6px;
-      margin-top: 9px;
-      overflow-x: auto;
-    }
-
-    .src-pill {
-      padding: 5px 11px;
-      border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--muted);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: 0.15s;
-    }
-    .src-pill.active {
-      background: var(--accent);
-      color: #03111a;
-      border-color: var(--accent);
-    }
-
-    .lot-card {
-      display: flex;
-      gap: 11px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 11px;
-      margin-bottom: 10px;
-      transition: transform 0.15s ease;
-    }
-    .lot-card:active {
-      transform: scale(0.99);
-    }
-    .lot-card.hot {
-      border-color: rgba(52, 211, 153, 0.5);
-      background: linear-gradient(135deg, rgba(52, 211, 153, 0.11), rgba(255, 255, 255, 0.05));
-    }
-
-    .lot-img {
-      width: 84px;
-      height: 84px;
-      border-radius: 14px;
-      object-fit: cover;
-      background: rgba(255, 255, 255, 0.05);
-      flex-shrink: 0;
-    }
-
-    .lot-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .lot-title {
-      font-size: 13.5px;
-      font-weight: 600;
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .lot-meta {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .src-badge {
-      font-size: 9.5px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 5px;
-      background: rgba(56, 189, 248, 0.2);
-      color: var(--accent);
-    }
-    .src-badge.PROM {
-      background: rgba(167, 139, 250, 0.22);
-      color: var(--purple);
-    }
-    .src-badge.SHAFA {
-      background: rgba(251, 191, 36, 0.22);
-      color: var(--amber);
-    }
-
-    .hot-badge {
-      background: rgba(52, 211, 153, 0.22);
-      color: var(--green);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 5px;
-    }
-
-    .lot-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-      gap: 5px;
-    }
-
-    .lot-price {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--green);
-      white-space: nowrap;
-    }
-
-    .lot-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    .btn-sm {
-      padding: 6px 8px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--glass-strong);
-      color: var(--text);
-      text-decoration: none;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .btn-sm.primary {
-      background: var(--accent);
-      color: #041019;
-      border: none;
-    }
-
-    .market-item {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 13px;
-      margin-bottom: 10px;
-    }
-
-    .market-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
-
-    .market-name {
-      font-size: 14.5px;
-      font-weight: 700;
-    }
-
-    .market-tag {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 8px;
-      background: rgba(52, 211, 153, 0.15);
-      color: var(--green);
-      font-weight: 700;
-    }
-
-    .market-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
-      background: rgba(0, 0, 0, 0.25);
-      padding: 9px;
-      border-radius: 12px;
-    }
-
-    .m-stat span {
-      display: block;
-      font-size: 10.5px;
-      color: var(--muted);
-    }
-
-    .m-stat strong {
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .chart-box {
-      width: 100%;
-      height: 110px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    .field {
-      margin-bottom: 12px;
-    }
-
-    .field label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 11px 13px;
-      border-radius: 13px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.45);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--accent);
-    }
-
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .btn-main {
-      width: 100%;
-      padding: 13px;
-      border-radius: 15px;
-      border: none;
-      background: linear-gradient(135deg, #38bdf8, #0284c7);
-      color: #03111a;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 6px 20px var(--accent-glow);
-    }
-
-    .btn-guest {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 15px;
-      border: 1px solid var(--border-light);
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-      font-size: 13.5px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-bottom: 12px;
-    }
-
-    .chip {
-      padding: 6px 11px;
-      border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border);
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .src-checks {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .src-check-box {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 9px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      font-size: 12.5px;
-      font-weight: 600;
-    }
-
-    .defect-toggle {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 9px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      margin-bottom: 7px;
-      font-size: 13px;
-    }
-
-    .defect-toggle input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
-    }
-
-    .calc-result {
-      padding: 14px;
-      border-radius: 16px;
-      background: rgba(52, 211, 153, 0.1);
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .deal-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 13px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
-
-    .nav-bar {
-      position: fixed;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 24px);
-      max-width: 536px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      padding: 5px;
-      background: rgba(13, 18, 28, 0.88);
-      backdrop-filter: blur(26px);
-      -webkit-backdrop-filter: blur(26px);
-      border: 1px solid var(--border);
-      border-top-color: var(--border-light);
-      border-radius: 22px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-      z-index: 100;
-    }
-
-    .nav-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      padding: 8px 2px;
-      border-radius: 16px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      transition: 0.15s;
-    }
-
-    .nav-btn.active {
-      background: var(--glass-strong);
-      color: var(--accent);
-    }
-
-    .toast {
-      position: fixed;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid var(--accent);
-      color: var(--text);
-      padding: 9px 15px;
-      border-radius: 13px;
-      font-size: 12.5px;
-      font-weight: 600;
-      z-index: 1000;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div id="toast" class="toast"></div>
-
-  <!-- POPUP LOGIN / GUEST REQUEST -->
-  <div id="pinModal" class="pin-overlay">
-    <div class="pin-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <div style="font-size: 18px; font-weight: 800;" data-i18n="login_title">🔐 Вход в LotPulse</div>
-        <button class="lang-btn" onclick="toggleLang()" id="modalLangBtn">UA / RU</button>
-      </div>
-      <div id="modalHint" style="font-size: 12.5px; color: var(--muted); margin-bottom: 14px;" data-i18n="login_hint">
-        Введите PIN-код владельца или запросите гостевой доступ на 1 сессию.
-      </div>
-      <div class="field">
-        <label data-i18n="server_url">Адрес сервера ПК</label>
-        <input type="text" id="modalUrlInput" placeholder="https://xxxxx.lhr.life" />
-      </div>
-      <div class="field">
-        <label data-i18n="pin_label">PIN-код владельца</label>
-        <input type="password" id="modalPinInput" placeholder="••••••" />
-      </div>
-      <button class="btn-main" onclick="submitModalLogin()" data-i18n="btn_enter">Войти по PIN-коду</button>
-      <button class="btn-guest" id="guestReqBtn" onclick="requestGuestSession()" data-i18n="btn_guest">
-        👋 Запросить доступ у владельца (1 сессия)
-      </button>
-      <div id="guestWaitStatus" style="font-size:12px; color:var(--amber); text-align:center; margin-top:10px; display:none;"></div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <div class="logo-badge">LP</div>
-        <h1>LotPulse</h1>
-      </div>
-      <div class="header-right">
-        <button class="lang-btn" onclick="toggleLang()" id="headerLangBtn">RU</button>
-        <div class="status-pill" onclick="openPinModal()">
-          <div id="statusDot" class="status-indicator"></div>
-          <span id="statusText">PIN</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 1: LIVE FEED -->
-    <div id="tab-feed" class="tab-content active">
-      <div class="card" style="padding: 12px 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div>
-            <div style="font-size: 11px; color: var(--muted);" data-i18n="radar_active">Мультирадар ПК</div>
-            <div id="activeQueryLabel" style="font-size: 12.5px; font-weight: 700;">...</div>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button class="btn-sm" onclick="openPinModal()">🔐</button>
-            <button class="btn-sm primary" onclick="loadLots(true)" data-i18n="btn_refresh">Обновить</button>
-          </div>
-        </div>
-        <input type="text" id="localFilterInput" placeholder="Поиск по названию или городу..." oninput="renderLots()" style="padding: 9px 12px; font-size: 13px;" />
-        <div class="source-tabs">
-          <div class="src-pill active" onclick="setSourceFilter('ALL', this)">Все</div>
-          <div class="src-pill" onclick="setSourceFilter('OLX', this)">OLX</div>
-          <div class="src-pill" onclick="setSourceFilter('PROM', this)">Prom.ua</div>
-          <div class="src-pill" onclick="setSourceFilter('SHAFA', this)">Shafa</div>
-        </div>
-      </div>
-      <div id="lotsContainer"></div>
-    </div>
-
-    <!-- TAB 2: MARKET CATALOG & CHARTS -->
-    <div id="tab-market" class="tab-content">
-      <div class="card">
-        <div class="card-title">
-          <span data-i18n="market_chart">Динамика цен рынка</span>
-          <span id="chartModelName" style="font-size: 12px; color: var(--accent);">Google Pixel 7 Pro</span>
-        </div>
-        <div class="chart-box" id="chartContainer"></div>
-      </div>
-      <div id="marketList"></div>
-    </div>
-
-    <!-- TAB 3: RADAR SETTINGS & TG CHANNELS -->
-    <div id="tab-radar" class="tab-content">
-      <div class="card">
-        <div class="card-title" data-i18n="radar_setup">Настройка мультирадара</div>
-        <div class="chips">
-          <div class="chip" onclick="quickPreset('Google Pixel 8, iPhone 13, iPhone 15', 5000, 23000)">Топ-3 модели</div>
-          <div class="chip" onclick="quickPreset('Google Pixel 7 Pro, Google Pixel 8', 4000, 14000)">Pixel 7P / 8</div>
-          <div class="chip" onclick="quickPreset('iPhone 13, iPhone 14 Pro, iPhone 15', 8000, 22000)">iPhone 13–15</div>
-          <div class="chip" onclick="quickPreset('Samsung S23 Ultra', 12000, 22000)">S23 Ultra</div>
-        </div>
-        <div class="field">
-          <label data-i18n="models_label">Модели через запятую</label>
-          <input type="text" id="fQuery" placeholder="Google Pixel 8, iPhone 13, iPhone 15" />
-        </div>
-        <div class="src-checks">
-          <label class="src-check-box"><input type="checkbox" id="srcOlx" checked /> OLX</label>
-          <label class="src-check-box"><input type="checkbox" id="srcProm" checked /> Prom</label>
-          <label class="src-check-box"><input type="checkbox" id="srcShafa" checked /> Shafa</label>
-        </div>
-        <div class="row-2">
-          <div class="field">
-            <label data-i18n="price_from">Цена от (₴)</label>
-            <input type="number" id="fMin" value="4000" />
-          </div>
-          <div class="field">
-            <label data-i18n="price_to">Цена до (₴)</label>
-            <input type="number" id="fMax" value="22000" />
-          </div>
-        </div>
-        <div class="field">
-          <label data-i18n="cond_label">Фильтр состояния</label>
-          <select id="fCondition">
-            <option value="good" data-i18n="cond_good">Только без дефектов (отсеивать битые/iCloud/MDM)</option>
-            <option value="any" data-i18n="cond_any">Все подряд (включая под восстановление)</option>
-          </select>
-        </div>
-        <button class="btn-main" onclick="saveRadar()" data-i18n="btn_scan">Сохранить и просканировать</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title" data-i18n="tg_agg_title">📢 Быстрый поиск в Telegram-барахолках</div>
-        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;" data-i18n="tg_agg_desc">
-          Открывает поиск по открытым ТГ-каналам объявлений Украины без риска блокировки аккаунта:
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <a class="btn-sm" style="text-align:center; padding:10px;" href="https://t.me/s/baraholka_ua" target="_blank">Барахолка UA ↗</a>
-          <a class="btn-sm" style="text-align:center; padding:10px;" href="https://t.me/s/apple_baraholka_ua" target="_blank">Apple Барахолка ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: CALCULATOR & DEALS CRM -->
-    <div id="tab-calc" class="tab-content">
-      <div class="card">
-        <div class="card-title" data-i18n="calc_title">Умный калькулятор маржи</div>
-        <div class="field">
-          <label data-i18n="lot_name">Название лота</label>
-          <input type="text" id="cTitle" value="iPhone / Pixel" />
-        </div>
-        <div class="row-2">
-          <div class="field">
-            <label data-i18n="buy_price">Цена покупки (₴)</label>
-            <input type="number" id="cBuy" value="8500" oninput="recalc()" />
-          </div>
-          <div class="field">
-            <label data-i18n="sell_price">Рынок в идеале (₴)</label>
-            <input type="number" id="cSell" value="13500" oninput="recalc()" />
-          </div>
-        </div>
-        <label class="defect-toggle">
-          <span data-i18n="def_screen">Замена дисплея / переклейка (-3 200 ₴)</span>
-          <input type="checkbox" data-cost="3200" onchange="recalc()" />
-        </label>
-        <label class="defect-toggle">
-          <span data-i18n="def_bat">Замена аккумулятора (-900 ₴)</span>
-          <input type="checkbox" data-cost="900" onchange="recalc()" />
-        </label>
-        <label class="defect-toggle">
-          <span data-i18n="def_body">Задняя крышка / корпус (-800 ₴)</span>
-          <input type="checkbox" data-cost="800" onchange="recalc()" />
-        </label>
-        <label class="defect-toggle">
-          <span data-i18n="def_face">Face ID / True Tone / шлейф (-1 400 ₴)</span>
-          <input type="checkbox" data-cost="1400" onchange="recalc()" />
-        </label>
-        <div class="calc-result">
-          <div>
-            <div style="font-size: 11.5px; color: var(--muted);" data-i18n="net_profit">Чистая прибыль и ROI</div>
-            <div id="cProfit" style="font-size: 19px; font-weight: 800; color: var(--green);">+5 000 ₴ (59%)</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11.5px; color: var(--muted);" data-i18n="max_buy">Потолок выкупа</div>
-            <div id="cMaxBuy" style="font-size: 15px; font-weight: 700;">11 000 ₴</div>
-          </div>
-        </div>
-        <button class="btn-sm primary" style="width: 100%; padding: 11px; margin-top: 10px;" onclick="saveDealFromCalc()" data-i18n="btn_add_deal">
-          + Добавить в мои сделки
-        </button>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <span data-i18n="my_deals">Мои сделки и избранное</span>
-          <span id="totalDealsProfit" style="color: var(--green); font-size: 13px;">0 ₴</span>
-        </div>
-        <div id="dealsList"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom Navigation -->
-  <div class="nav-bar">
-    <button class="nav-btn active" onclick="switchTab('feed', 0)">
-      <span>🔥</span>
-      <span data-i18n="nav_feed">Лента</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('market', 1)">
-      <span>📊</span>
-      <span data-i18n="nav_market">Рынок</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('radar', 2)">
-      <span>📡</span>
-      <span data-i18n="nav_radar">Радар</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('calc', 3)">
-      <span>🧮</span>
-      <span data-i18n="nav_calc">Расчёт</span>
-    </button>
-  </div>
-
-  <script>
-    const I18N = {
-      ru: {
-        login_title: "🔐 Вход в LotPulse",
-        login_hint: "Введите PIN-код владельца или запросите гостевой доступ на 1 сессию.",
-        server_url: "Адрес сервера ПК",
-        pin_label: "PIN-код владельца",
-        btn_enter: "Войти по PIN-коду",
-        btn_guest: "👋 Запросить доступ у владельца (1 сессия)",
-        radar_active: "Мультирадар ПК",
-        btn_refresh: "Обновить",
-        market_chart: "Динамика цен рынка",
-        radar_setup: "Настройка мультирадара",
-        models_label: "Модели через запятую",
-        price_from: "Цена от (₴)",
-        price_to: "Цена до (₴)",
-        cond_label: "Фильтр состояния",
-        cond_good: "Только без дефектов (отсеивать битые/iCloud/MDM)",
-        cond_any: "Все подряд (включая под восстановление)",
-        btn_scan: "Сохранить и просканировать",
-        tg_agg_title: "📢 Быстрый поиск в Telegram-барахолках",
-        tg_agg_desc: "Открывает поиск по открытым ТГ-каналам объявлений Украины без риска блокировки:",
-        calc_title: "Умный калькулятор маржи",
-        lot_name: "Название лота",
-        buy_price: "Цена покупки (₴)",
-        sell_price: "Рынок в идеале (₴)",
-        def_screen: "Замена дисплея / переклейка (-3 200 ₴)",
-        def_bat: "Замена аккумулятора (-900 ₴)",
-        def_body: "Задняя крышка / корпус (-800 ₴)",
-        def_face: "Face ID / True Tone / шлейф (-1 400 ₴)",
-        net_profit: "Чистая прибыль и ROI",
-        max_buy: "Потолок выкупа",
-        btn_add_deal: "+ Добавить в мои сделки",
-        my_deals: "Мои сделки и избранное",
-        nav_feed: "Лента",
-        nav_market: "Рынок",
-        nav_radar: "Радар",
-        nav_calc: "Расчёт",
-        hot_badge: "🔥 Ниже рынка",
-        btn_calc: "Расчёт",
-        btn_bargain: "💬 Торг",
-        bargain_msg: (t, p) => `Здравствуйте! Заинтересовал ваш ${t}. Готов забрать сегодня ОЛХ-доставкой или наложкой за ${Math.round(p * 0.85 / 100) * 100} грн, если всё соответствует описанию.`
-      },
-      ua: {
-        login_title: "🔐 Вхід у LotPulse",
-        login_hint: "Введіть PIN-код власника або запитайте гостьовий доступ на 1 сесію.",
-        server_url: "Адреса сервера ПК",
-        pin_label: "PIN-код власника",
-        btn_enter: "Увійти за PIN-кодом",
-        btn_guest: "👋 Запитати доступ у власника (1 сесія)",
-        radar_active: "Мультирадар ПК",
-        btn_refresh: "Оновити",
-        market_chart: "Динаміка цін ринку",
-        radar_setup: "Налаштування мультирадару",
-        models_label: "Моделі через кому",
-        price_from: "Ціна від (₴)",
-        price_to: "Ціна до (₴)",
-        cond_label: "Фільтр стану",
-        cond_good: "Тільки без дефектів (відсіювати биті/iCloud/MDM)",
-        cond_any: "Усі підряд (включно під відновлення)",
-        btn_scan: "Зберегти та просканувати",
-        tg_agg_title: "📢 Швидкий пошук у Telegram-барахолках",
-        tg_agg_desc: "Відкриває пошук по відкритих ТГ-каналах оголошень України без ризику блокування:",
-        calc_title: "Розумний калькулятор маржі",
-        lot_name: "Назва лота",
-        buy_price: "Ціна купівлі (₴)",
-        sell_price: "Ринок в ідеалі (₴)",
-        def_screen: "Заміна дисплея / переклейка (-3 200 ₴)",
-        def_bat: "Заміна акумулятора (-900 ₴)",
-        def_body: "Задня кришка / корпус (-800 ₴)",
-        def_face: "Face ID / True Tone / шлейф (-1 400 ₴)",
-        net_profit: "Чистий прибуток та ROI",
-        max_buy: "Стеля викупу",
-        btn_add_deal: "+ Додати в мої угоди",
-        my_deals: "Мої угоди та обране",
-        nav_feed: "Стрічка",
-        nav_market: "Ринок",
-        nav_radar: "Радар",
-        nav_calc: "Розрахунок",
-        hot_badge: "🔥 Нижче ринку",
-        btn_calc: "Розрахунок",
-        btn_bargain: "💬 Торг",
-        bargain_msg: (t, p) => `Вітаю! Зацікавив ваш ${t}. Готовий забрати сьогодні ОЛХ-доставкою або накладеним платежем за ${Math.round(p * 0.85 / 100) * 100} грн, якщо все відповідає опису.`
-      }
-    };
-
-    let currentLang = localStorage.getItem("lotpulse_lang") || "ru";
-    let currentSourceFilter = "ALL";
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramApi = urlParams.get("api");
-    if (paramApi && paramApi.startsWith("http")) {
-      localStorage.setItem("lotpulse_api", paramApi.replace(/\/$/, ""));
-    }
-
-    let API_BASE = localStorage.getItem("lotpulse_api") || "";
-    // Владелец хранится в localStorage, гостевая сессия — строго в sessionStorage (удаляется при закрытии окна!)
-    let AUTH_TOKEN = sessionStorage.getItem("lotpulse_guest_token") || localStorage.getItem("lotpulse_pin") || "";
-    let cachedLots = [];
-    let deals = JSON.parse(localStorage.getItem("lotpulse_deals") || "[]");
-    let guestPollTimer = null;
-
-    const MARKET_MODELS = [
-      { name: "Google Pixel 7 Pro 12/128", keys: ["pixel 7 pro", "7 pro"], query: "Google Pixel 7 Pro", avgSell: 13500, maxBuy: 10500, trend: [15200, 14800, 14300, 13900, 13700, 13500] },
-      { name: "Google Pixel 8 8/128", keys: ["pixel 8"], query: "Google Pixel 8", avgSell: 16200, maxBuy: 13000, trend: [18500, 17900, 17300, 16800, 16500, 16200] },
-      { name: "iPhone 13 128GB Neverlock", keys: ["iphone 13"], query: "iPhone 13", avgSell: 16500, maxBuy: 13200, trend: [18200, 17800, 17400, 17000, 16700, 16500] },
-      { name: "iPhone 14 Pro 128GB", keys: ["14 pro"], query: "iPhone 14 Pro", avgSell: 24500, maxBuy: 20500, trend: [27000, 26400, 25800, 25200, 24800, 24500] },
-      { name: "iPhone 15 128GB", keys: ["iphone 15"], query: "iPhone 15", avgSell: 25500, maxBuy: 21500, trend: [28200, 27600, 26900, 26300, 25900, 25500] },
-      { name: "Samsung S23 Ultra 12/256", keys: ["s23 ultra"], query: "Samsung S23 Ultra", avgSell: 24800, maxBuy: 20800, trend: [27500, 26800, 26100, 25500, 25100, 24800] }
-    ];
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
-    }
-
-    function applyLang() {
-      const dict = I18N[currentLang];
-      document.getElementById("headerLangBtn").textContent = currentLang.toUpperCase();
-      document.getElementById("modalLangBtn").textContent = currentLang === "ru" ? "УКР" : "РУС";
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (dict[key]) el.textContent = dict[key];
-      });
-      renderLots();
-      renderMarket();
-    }
-
-    function toggleLang() {
-      currentLang = currentLang === "ru" ? "ua" : "ru";
-      localStorage.setItem("lotpulse_lang", currentLang);
-      applyLang();
-    }
-
-    function detectModel(title) {
-      const low = title.toLowerCase();
-      return MARKET_MODELS.find(m => m.keys.some(k => low.includes(k))) || null;
-    }
-
-    function syncInputs() {
-      document.getElementById("modalUrlInput").value = API_BASE;
-      document.getElementById("modalPinInput").value = localStorage.getItem("lotpulse_pin") || "";
-    }
-    syncInputs();
-
-    function openPinModal() {
-      syncInputs();
-      document.getElementById("pinModal").classList.add("open");
-    }
-
-    function closePinModal() {
-      document.getElementById("pinModal").classList.remove("open");
-      if (guestPollTimer) clearInterval(guestPollTimer);
-    }
-
-    async function submitModalLogin() {
-      const val = document.getElementById("modalUrlInput").value.trim().replace(/\/$/, "");
-      const pin = document.getElementById("modalPinInput").value.trim();
-      if (!val.startsWith("http")) {
-        showToast("Введите ссылку https://...lhr.life");
-        return;
-      }
-      API_BASE = val;
-      AUTH_TOKEN = pin;
-      localStorage.setItem("lotpulse_api", API_BASE);
-      localStorage.setItem("lotpulse_pin", pin);
-      sessionStorage.removeItem("lotpulse_guest_token");
-      const ok = await checkStatus();
-      if (ok) {
-        closePinModal();
-        await loadLots(false);
-      }
-    }
-
-    async function requestGuestSession() {
-      const val = document.getElementById("modalUrlInput").value.trim().replace(/\/$/, "");
-      if (!val.startsWith("http")) {
-        showToast("Нет адреса сервера ПК");
-        return;
-      }
-      API_BASE = val;
-      localStorage.setItem("lotpulse_api", API_BASE);
-
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
-      const payload = {
-        tg_id: String(tgUser.id || "Unknown"),
-        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || "Друг",
-        username: tgUser.username || ""
-      };
-
-      const statusBox = document.getElementById("guestWaitStatus");
-      statusBox.style.display = "block";
-      statusBox.style.color = "var(--amber)";
-      statusBox.textContent = currentLang === "ua"
-        ? "⏳ Запит надіслано власнику в Telegram. Очікуємо підтвердження..."
-        : "⏳ Запрос отправлен владельцу в Telegram. Ожидаем подтверждения...";
-
-      try {
-        const res = await fetch(API_BASE + "/api/request_access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        const reqId = data.req_id;
-
-        if (guestPollTimer) clearInterval(guestPollTimer);
-        guestPollTimer = setInterval(async () => {
-          try {
-            const chk = await fetch(`${API_BASE}/api/check_access/${reqId}`);
-            const st = await chk.json();
-            if (st.status === "approved" && st.token) {
-              clearInterval(guestPollTimer);
-              AUTH_TOKEN = st.token;
-              // Сохраняем строго в sessionStorage — при закрытии окна сессия исчезнет!
-              sessionStorage.setItem("lotpulse_guest_token", st.token);
-              statusBox.style.color = "var(--green)";
-              statusBox.textContent = "✅ Доступ разрешён на 1 сессию!";
-              const ok = await checkStatus();
-              if (ok) {
-                closePinModal();
-                await loadLots(false);
-              }
-            } else if (st.status === "denied") {
-              clearInterval(guestPollTimer);
-              statusBox.style.color = "var(--red)";
-              statusBox.textContent = "❌ Владелец отклонил запрос.";
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LotPulse Pro — iOS Glassmorphism, Catalog & IMEI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: #030305;
+            color: #f5f5f7;
+            overflow-x: hidden;
+        }
+
+        /* Deep OLED Glassmorphism */
+        .glass-panel {
+            background: rgba(18, 18, 26, 0.75);
+            backdrop-filter: blur(45px) saturate(180%);
+            -webkit-backdrop-filter: blur(45px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(26, 26, 36, 0.58);
+            backdrop-filter: blur(30px) saturate(160%);
+            -webkit-backdrop-filter: blur(30px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, background 0.25s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            background: rgba(32, 32, 44, 0.68);
+        }
+
+        /* Spring Press Physics */
+        .spring-btn {
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .spring-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Animated OLED Mesh Blobs */
+        .mesh-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: #020204;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(115px);
+            opacity: 0.22;
+            animation: floatBlob 18s infinite alternate ease-in-out;
+        }
+        .blob-1 { top: -12%; left: -10%; width: 55vw; height: 55vw; background: #0a84ff; }
+        .blob-2 { bottom: -15%; right: -10%; width: 60vw; height: 60vw; background: #30d158; animation-delay: -6s; }
+        .blob-3 { top: 38%; left: 28%; width: 42vw; height: 42vw; background: #bf5af2; animation-delay: -12s; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(35px, 50px) scale(1.12); }
+        }
+
+        /* Sniper Mode Header Glow */
+        @keyframes sniperPulse {
+            0%, 100% {
+                box-shadow: 0 8px 30px rgba(48, 209, 88, 0.18), inset 0 -1px 0 rgba(48, 209, 88, 0.45);
+                border-bottom-color: rgba(48, 209, 88, 0.55);
             }
-          } catch (e) {}
-        }, 2000);
-      } catch (e) {
-        statusBox.style.color = "var(--red)";
-        statusBox.textContent = "Ошибка связи с сервером ПК.";
-      }
-    }
-
-    function authHeaders(extra = {}) {
-      return { ...extra, "X-Pin": AUTH_TOKEN };
-    }
-
-    function showToast(text) {
-      const t = document.getElementById("toast");
-      t.textContent = text;
-      t.style.display = "block";
-      setTimeout(() => { t.style.display = "none"; }, 2500);
-    }
-
-    function switchTab(name, idx) {
-      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
-      document.getElementById("tab-" + name).classList.add("active");
-      document.querySelectorAll(".nav-btn")[idx].classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function setSourceFilter(src, el) {
-      currentSourceFilter = src;
-      document.querySelectorAll(".src-pill").forEach(p => p.classList.remove("active"));
-      el.classList.add("active");
-      renderLots();
-    }
-
-    function quickPreset(q, min, max) {
-      document.getElementById("fQuery").value = q;
-      document.getElementById("fMin").value = min;
-      document.getElementById("fMax").value = max;
-    }
-
-    async function checkStatus() {
-      const dot = document.getElementById("statusDot");
-      const txt = document.getElementById("statusText");
-      if (!API_BASE || !AUTH_TOKEN) {
-        dot.className = "status-indicator offline";
-        txt.textContent = "Вход";
-        openPinModal();
-        return false;
-      }
-      try {
-        const res = await fetch(API_BASE + "/api/status", { headers: authHeaders() });
-        if (res.status === 403) {
-          dot.className = "status-indicator offline";
-          txt.textContent = "Доступ закрыт";
-          openPinModal();
-          return false;
+            50% {
+                box-shadow: 0 8px 40px rgba(48, 209, 88, 0.42), inset 0 -1px 0 rgba(48, 209, 88, 0.9);
+                border-bottom-color: rgba(48, 209, 88, 0.95);
+            }
         }
-        const data = await res.json();
-        dot.className = "status-indicator online";
-        txt.textContent = data.role === "guest" ? "Гость (1 сессия)" : "ПК Защищён";
-        closePinModal();
-        if (data.filter) {
-          document.getElementById("activeQueryLabel").textContent =
-            `${data.filter.query} (${data.filter.min_price}–${data.filter.max_price} ₴)`;
-          document.getElementById("fQuery").value = data.filter.query;
-          document.getElementById("fMin").value = data.filter.min_price;
-          document.getElementById("fMax").value = data.filter.max_price;
-          document.getElementById("fCondition").value = data.filter.condition;
-          const srcs = (data.filter.sources || "olx,prom,shafa").split(",");
-          document.getElementById("srcOlx").checked = srcs.includes("olx");
-          document.getElementById("srcProm").checked = srcs.includes("prom");
-          document.getElementById("srcShafa").checked = srcs.includes("shafa");
+        .sniper-active {
+            animation: sniperPulse 2.6s infinite ease-in-out;
         }
-        return true;
-      } catch (e) {
-        dot.className = "status-indicator offline";
-        txt.textContent = "Офлайн";
-        openPinModal();
-        return false;
-      }
-    }
 
-    async function loadLots(notify = false) {
-      if (!API_BASE || !AUTH_TOKEN) return;
-      try {
-        const res = await fetch(API_BASE + "/api/lots?limit=60", { headers: authHeaders() });
-        if (res.status === 403) {
-          openPinModal();
-          return;
-        }
-        const data = await res.json();
-        cachedLots = data.lots || [];
-        renderLots();
-        if (notify) showToast("OK");
-      } catch (e) {}
-    }
+        /* Slide-out Sidebar Drawer */
+        #sidebarBackdrop { transition: opacity 0.3s ease; }
+        #sidebarDrawer { transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1); }
 
-    function copyBargain(title, price) {
-      const text = I18N[currentLang].bargain_msg(title, price);
-      navigator.clipboard.writeText(text);
-      showToast(currentLang === "ua" ? "Шаблон торгу скопійовано!" : "Шаблон торга скопирован!");
-    }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white pb-28">
 
-    function renderLots() {
-      const container = document.getElementById("lotsContainer");
-      const dict = I18N[currentLang];
-      const q = document.getElementById("localFilterInput").value.trim().toLowerCase();
-      const filtered = cachedLots.filter(l => {
-        const src = (l.source || "OLX").toUpperCase();
-        const matchSrc = currentSourceFilter === "ALL" || src === currentSourceFilter;
-        const matchText = !q || l.title.toLowerCase().includes(q) || l.city.toLowerCase().includes(q);
-        return matchSrc && matchText;
-      });
+    <!-- Animated OLED Background -->
+    <div class="mesh-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
 
-      if (!filtered.length) {
-        container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;">—</div>`;
-        return;
-      }
+    <!-- SIDEBAR DRAWER OVERLAY -->
+    <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md opacity-0 pointer-events-none"></div>
 
-      container.innerHTML = filtered.map(lot => {
-        const src = (lot.source || "OLX").toUpperCase();
-        const img = lot.image || "https://via.placeholder.com/150/1e293b/94a3b8?text=" + src;
-        const safeTitle = lot.title.replace(/'/g, "").replace(/"/g, "");
-        const matched = detectModel(lot.title);
-        const isHot = matched && lot.price <= matched.maxBuy;
-        return `
-          <div class="lot-card ${isHot ? "hot" : ""}">
-            <img class="lot-img" src="${img}" alt="" onerror="this.src='https://via.placeholder.com/150/1e293b/94a3b8?text=${src}'"/>
-            <div class="lot-info">
-              <div>
-                <div class="lot-title">${lot.title}</div>
-                <div class="lot-meta">
-                  <span class="src-badge ${src}">${src}</span>
-                  <span>📍 ${lot.city}</span>
-                  ${isHot ? `<span class="hot-badge">${dict.hot_badge}</span>` : ''}
+    <!-- SLIDE-OUT SIDEBAR DRAWER -->
+    <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 z-50 w-76 max-w-[84vw] glass-panel border-r border-white/10 p-5 flex flex-col justify-between -translate-x-full overflow-y-auto">
+        <div>
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/30">
+                        LP
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white">LotPulse Pro</div>
+                        <div class="text-[11px] text-gray-400">iOS Reseller Terminal</div>
+                    </div>
                 </div>
-              </div>
-              <div class="lot-bottom">
-                <div class="lot-price">${lot.price.toLocaleString("ru-RU")} ₴</div>
-                <div class="lot-actions">
-                  <button class="btn-sm" onclick="copyBargain('${safeTitle}', ${lot.price})">${dict.btn_bargain}</button>
-                  <button class="btn-sm" onclick="sendToCalc(${lot.price}, '${safeTitle}')">${dict.btn_calc}</button>
-                  <a class="btn-sm primary" href="${lot.url}" target="_blank">↗</a>
-                </div>
-              </div>
+                <button onclick="closeSidebar()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 text-sm spring-btn">✕</button>
             </div>
-          </div>
-        `;
-      }).join("");
-    }
 
-    async function saveRadar() {
-      const srcs = [];
-      if (document.getElementById("srcOlx").checked) srcs.push("olx");
-      if (document.getElementById("srcProm").checked) srcs.push("prom");
-      if (document.getElementById("srcShafa").checked) srcs.push("shafa");
+            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500 px-3 mb-2">Каталог моделей (Флагмани)</div>
+            <nav class="space-y-1 mb-5">
+                <button onclick="openCatalogCategory('phones')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold bg-blue-600/20 text-blue-400 border border-blue-500/30 spring-btn" data-sec="phones">
+                    <span class="flex items-center gap-3"><span>📱</span> Телефони</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Каталог</span>
+                </button>
+                <button onclick="openCatalogCategory('laptops')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="laptops">
+                    <span class="flex items-center gap-3"><span>💻</span> Ноутбуки</span>
+                </button>
+                <button onclick="openCatalogCategory('headphones')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="headphones">
+                    <span class="flex items-center gap-3"><span>🎧</span> Навушники</span>
+                </button>
+                <button onclick="openCatalogCategory('pc')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="pc">
+                    <span class="flex items-center gap-3"><span>🖥️</span> ПК та Комплектуючі</span>
+                </button>
+            </nav>
 
-      const payload = {
-        query: document.getElementById("fQuery").value.trim() || "Google Pixel 8",
-        min_price: parseInt(document.getElementById("fMin").value) || 1000,
-        max_price: parseInt(document.getElementById("fMax").value) || 22000,
-        condition: document.getElementById("fCondition").value,
-        sources: srcs.join(",") || "olx",
-        active: true
-      };
-
-      showToast("Сканирую OLX / Prom / Shafa...");
-      try {
-        const res = await fetch(API_BASE + "/api/filters", {
-          method: "POST",
-          headers: authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify(payload)
-        });
-        if (res.status === 403) {
-          openPinModal();
-          return;
-        }
-        const data = await res.json();
-        showToast(`+${data.added_now}`);
-        await checkStatus();
-        await loadLots(false);
-        switchTab("feed", 0);
-      } catch (e) {
-        showToast("Error");
-      }
-    }
-
-    function renderMarket() {
-      const list = document.getElementById("marketList");
-      list.innerHTML = MARKET_MODELS.map((m, i) => {
-        const margin = m.avgSell - m.maxBuy;
-        return `
-          <div class="market-item" onclick="drawChart(${i})">
-            <div class="market-top">
-              <div class="market-name">${m.name}</div>
-              <div class="market-tag">+${margin.toLocaleString("ru-RU")} ₴</div>
-            </div>
-            <div class="market-grid">
-              <div class="m-stat"><span>Рынок</span><strong>${m.avgSell.toLocaleString("ru-RU")} ₴</strong></div>
-              <div class="m-stat"><span>Выкуп до</span><strong style="color:var(--accent)">${m.maxBuy.toLocaleString("ru-RU")} ₴</strong></div>
-              <div class="m-stat"><span>ROI</span><strong style="color:var(--green)">~${Math.round((margin / m.maxBuy) * 100)}%</strong></div>
-            </div>
-            <button class="btn-sm primary" style="width:100%; padding:8px;" onclick="event.stopPropagation(); searchFromMarket('${m.query}', ${m.maxBuy})">
-              🔍 ${m.query} ≤ ${m.maxBuy.toLocaleString("ru-RU")} ₴
-            </button>
-          </div>
-        `;
-      }).join("");
-      drawChart(0);
-    }
-
-    function drawChart(index) {
-      const m = MARKET_MODELS[index];
-      document.getElementById("chartModelName").textContent = m.name;
-      const pts = m.trend;
-      const min = Math.min(...pts) - 500;
-      const max = Math.max(...pts) + 500;
-      const w = 320, h = 85;
-      const coords = pts.map((v, i) => {
-        const x = (i / (pts.length - 1)) * (w - 20) + 10;
-        const y = h - 12 - ((v - min) / (max - min)) * (h - 24);
-        return `${x},${y}`;
-      });
-      const last = coords[coords.length - 1].split(",");
-      document.getElementById("chartContainer").innerHTML = `
-        <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%">
-          <polyline fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${coords.join(" ")}" />
-          <circle cx="${last[0]}" cy="${last[1]}" r="5" fill="#34d399" />
-          <text x="10" y="14" fill="#94a3b8" font-size="10">-6 мес: ${pts[0]} ₴</text>
-          <text x="${w - 105}" y="14" fill="#34d399" font-size="10" font-weight="bold">Сейчас: ${pts[pts.length - 1]} ₴</text>
-        </svg>
-      `;
-    }
-
-    function searchFromMarket(query, maxBuy) {
-      document.getElementById("fQuery").value = query;
-      document.getElementById("fMin").value = Math.round(maxBuy * 0.45);
-      document.getElementById("fMax").value = maxBuy;
-      saveRadar();
-    }
-
-    function sendToCalc(price, title = "Лот") {
-      document.getElementById("cTitle").value = title;
-      document.getElementById("cBuy").value = price;
-      const matched = detectModel(title);
-      document.getElementById("cSell").value = matched
-        ? matched.avgSell
-        : Math.round(price * 1.35 / 100) * 100;
-      recalc();
-      switchTab("calc", 3);
-    }
-
-    function getCalcValues() {
-      const buy = parseFloat(document.getElementById("cBuy").value) || 0;
-      const sell = parseFloat(document.getElementById("cSell").value) || 0;
-      let repairs = 0;
-      document.querySelectorAll("#tab-calc input[type='checkbox']:checked").forEach(cb => {
-        repairs += parseFloat(cb.dataset.cost) || 0;
-      });
-      const totalCost = buy + repairs;
-      const profit = sell - totalCost;
-      const roi = totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0;
-      return { buy, sell, repairs, profit, roi };
-    }
-
-    function recalc() {
-      const { sell, repairs, profit, roi } = getCalcValues();
-      const maxBuy = Math.max(0, sell - repairs - 2500);
-      const pEl = document.getElementById("cProfit");
-      pEl.textContent = `${profit >= 0 ? "+" : ""}${profit.toLocaleString("ru-RU")} ₴ (${roi}%)`;
-      pEl.style.color = profit >= 0 ? "var(--green)" : "var(--red)";
-      document.getElementById("cMaxBuy").textContent = maxBuy.toLocaleString("ru-RU") + " ₴";
-    }
-
-    function saveDealFromCalc() {
-      const title = document.getElementById("cTitle").value.trim() || "Смартфон";
-      const { buy, sell, repairs, profit } = getCalcValues();
-      deals.unshift({ id: Date.now(), title, buy, sell, repairs, profit });
-      localStorage.setItem("lotpulse_deals", JSON.stringify(deals));
-      renderDeals();
-      showToast("+1");
-    }
-
-    function removeDeal(id) {
-      deals = deals.filter(d => d.id !== id);
-      localStorage.setItem("lotpulse_deals", JSON.stringify(deals));
-      renderDeals();
-    }
-
-    function renderDeals() {
-      const box = document.getElementById("dealsList");
-      const total = deals.reduce((acc, d) => acc + d.profit, 0);
-      document.getElementById("totalDealsProfit").textContent =
-        `${total >= 0 ? "+" : ""}${total.toLocaleString("ru-RU")} ₴`;
-
-      if (!deals.length) {
-        box.innerHTML = `<div style="font-size:12.5px;color:var(--muted);text-align:center;padding:8px;">—</div>`;
-        return;
-      }
-
-      box.innerHTML = deals.map(d => `
-        <div class="deal-row">
-          <div>
-            <div style="font-weight:700;">${d.title}</div>
-            <div style="font-size:11px;color:var(--muted);">${d.buy} + ${d.repairs} → ${d.sell} ₴</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <strong style="color:${d.profit >= 0 ? "var(--green)" : "var(--red)"}">${d.profit >= 0 ? "+" : ""}${d.profit} ₴</strong>
-            <button class="btn-sm" onclick="removeDeal(${d.id})">✕</button>
-          </div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500 px-3 mb-2">Інструменти та AI</div>
+            <nav class="space-y-1">
+                <button onclick="selectDrawerSection('imei')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="imei">
+                    <span class="flex items-center gap-3"><span>🔍</span> Пробити IMEI / Serial</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">New</span>
+                </button>
+                <button onclick="selectDrawerSection('news')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="news">
+                    <span class="flex items-center gap-3"><span>📰</span> Новини та Reddit AI</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">AI</span>
+                </button>
+                <button onclick="selectDrawerSection('compare')" class="drawer-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold text-gray-200 hover:bg-white/10 spring-btn" data-sec="compare">
+                    <span class="flex items-center gap-3"><span>⚖️</span> Порівняння моделей</span>
+                </button>
+            </nav>
         </div>
-      `).join("");
-    }
 
-    applyLang();
-    renderDeals();
-    checkStatus().then(ok => { if (ok) loadLots(false); });
-    recalc();
-    setInterval(loadLots, 35000);
-  </script>
+        <div class="glass-card rounded-2xl p-3.5 space-y-2 mt-4">
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-400">Сервер ПК:</span>
+                <span id="drawerStatus" class="text-emerald-400 font-semibold">● Активний</span>
+            </div>
+            <button onclick="closeSidebar(); openAuthModal();" class="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white spring-btn">
+                🔑 Керування доступом
+            </button>
+        </div>
+    </aside>
+
+    <!-- NEWS & REDDIT INSIGHTS DETAIL MODAL -->
+    <div id="newsModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-xl hidden">
+        <div class="glass-panel w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl border-t sm:border border-white/15 max-h-[88vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <span id="nmVerdictBadge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
+                <button onclick="closeNewsModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 text-sm spring-btn">✕</button>
+            </div>
+            <div id="nmCategory" class="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-1"></div>
+            <h3 id="nmTitle" class="text-lg font-bold text-white leading-snug mb-3"></h3>
+            <p id="nmSummary" class="text-xs text-gray-300 leading-relaxed mb-4"></p>
+
+            <div class="space-y-3 mb-5">
+                <div class="glass-card rounded-2xl p-3.5 border-emerald-500/25 bg-emerald-500/5">
+                    <div class="text-xs font-bold text-emerald-400 mb-1.5">✅ Плюси (за відгуками власників):</div>
+                    <ul id="nmPros" class="text-xs text-gray-300 space-y-1 list-disc list-inside"></ul>
+                </div>
+                <div class="glass-card rounded-2xl p-3.5 border-rose-500/25 bg-rose-500/5">
+                    <div class="text-xs font-bold text-rose-400 mb-1.5">⚠️ Реальні проблеми та мінуси з Reddit:</div>
+                    <ul id="nmCons" class="text-xs text-gray-300 space-y-1 list-disc list-inside"></ul>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a id="nmSourceLink" href="#" target="_blank" class="flex-grow text-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl text-xs shadow-lg shadow-blue-600/30 spring-btn">
+                    🔗 Перейти на першоджерело (Reddit / Стаття) ↗
+                </a>
+                <button onclick="closeNewsModal()" class="px-5 py-3.5 rounded-2xl glass-panel text-xs font-semibold text-gray-300 hover:text-white spring-btn">
+                    Закрити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH / GUEST ACCESS MODAL -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl hidden">
+        <div class="glass-panel w-full max-w-md rounded-[32px] p-7 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
+                    <span>🔐</span> <span id="modalTitle">Вхід у LotPulse Pro</span>
+                </h2>
+                <button onclick="toggleLang()" id="langBtn" class="text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold spring-btn">УКР</button>
+            </div>
+            <p id="modalSub" class="text-xs text-gray-400 mb-6 leading-relaxed">Введіть PIN-код власника або запитайте гостьовий доступ на 1 сесію.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label id="lblApi" class="block text-xs font-medium text-gray-400 mb-1.5">URL сервера ПК (Tunnel)</label>
+                    <input type="text" id="apiUrlInput" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label id="lblPin" class="block text-xs font-medium text-gray-400 mb-1.5">PIN-код власника</label>
+                    <input type="password" id="pinInput" placeholder="••••••" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white tracking-widest focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <button onclick="loginWithPin()" id="btnLogin" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-blue-600/30 spring-btn">
+                    Увійти за PIN-кодом
+                </button>
+                <div class="relative flex py-1.5 items-center">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span id="lblOr" class="flex-shrink mx-4 text-[11px] text-gray-500 uppercase tracking-wider">або для гостя</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+                <button onclick="requestGuestAccess()" id="btnGuest" class="w-full glass-panel hover:bg-white/10 text-white font-medium py-3.5 rounded-2xl flex items-center justify-center gap-2 spring-btn">
+                    👋 Запросити доступ у власника (1 сесія)
+                </button>
+                <div id="guestStatus" class="text-center text-xs text-amber-400 mt-2 font-medium hidden">⏳ Запит надіслано власнику в Telegram. Очікуємо підтвердження...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP iOS GLASS HEADER -->
+    <header id="mainHeader" class="glass-panel sticky top-0 z-40 px-4 py-3 border-b border-white/10 transition-all duration-500">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <button onclick="openSidebar()" class="w-10 h-10 rounded-2xl glass-panel hover:bg-white/15 flex items-center justify-center text-white text-lg flex-shrink-0 spring-btn" aria-label="Меню">
+                    ☰
+                </button>
+
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-extrabold text-white tracking-tight truncate">LotPulse Pro</h1>
+                        <button onclick="switchTab('catalog')" id="activeCategoryPill" class="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold spring-btn">📱 Каталог</button>
+                        <span id="sniperBadge" class="hidden text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full font-bold animate-pulse">🎯 Снайпер</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px] text-gray-400 mt-0.5">
+                        <span id="roleIndicator" class="text-emerald-400 font-medium">● <span id="roleName">Онлайн</span></span>
+                        <span>•</span>
+                        <span id="usdRate" class="text-gray-200 font-semibold">USD: --</span>
+                        <span>•</span>
+                        <span id="eurRate" class="text-gray-200 font-semibold">EUR: --</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button onclick="triggerScan()" class="w-9 h-9 rounded-2xl glass-panel hover:bg-white/15 flex items-center justify-center text-sm spring-btn" title="Оновити">
+                    🔄
+                </button>
+                <button onclick="openAuthModal()" class="px-3 py-2 rounded-2xl glass-panel text-xs font-semibold text-gray-200 hover:text-white spring-btn">
+                    🔑 <span id="ownerBtnText">Доступ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="max-w-4xl mx-auto w-full p-4 flex-grow">
+
+        <!-- TAB 1: СТРІЧКА ЛОТІВ (FEED) -->
+        <section id="tab-feed" class="space-y-4">
+            <!-- Quick Filter & Catalog Shortcut Bar -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                <button onclick="switchTab('catalog')" class="px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg shadow-blue-600/25 spring-btn">🎛️ Моделі (<span id="selectedModelsBadge">0</span>)</button>
+                <button onclick="filterSource('all', this)" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-lg shadow-blue-600/30 spring-btn">🔥 Усі топ (<span id="countAll">0</span>)</button>
+                <button onclick="filterSource('OLX', this)" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white spring-btn">🛒 OLX</button>
+                <button onclick="filterSource('PROM', this)" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white spring-btn">📦 Prom</button>
+                <button onclick="filterSource('SHAFA', this)" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white spring-btn">👗 Shafa</button>
+                <button onclick="filterSource('TG', this)" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white spring-btn">💬 Telegram</button>
+            </div>
+
+            <!-- Lots Grid -->
+            <div id="lotsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div class="col-span-2 text-center py-20 text-gray-500 text-sm">Завантаження лотів з радара...</div>
+            </div>
+        </section>
+
+        <!-- TAB 2: КАТАЛОГ МОДЕЛЕЙ (ACCORDION FLAGSHIPS FIRST) -->
+        <section id="tab-catalog" class="space-y-4 hidden pb-16">
+            <div class="glass-panel p-5 rounded-[28px] flex items-center justify-between gap-3">
+                <div>
+                    <h2 id="catalogHeaderTitle" class="text-base font-bold text-white">📱 Вибір моделей для радара</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Спочатку йдуть топові флагмани. Оберіть модель та варіанти памʼяті.</p>
+                </div>
+                <button onclick="clearCatalogSelection()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-gray-300 spring-btn">Скинути</button>
+            </div>
+
+            <!-- Category Switcher Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <button onclick="openCatalogCategory('phones')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-semibold bg-blue-600 text-white spring-btn" data-cat="phones">📱 Телефони</button>
+                <button onclick="openCatalogCategory('laptops')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-semibold glass-panel text-gray-300 spring-btn" data-cat="laptops">💻 Ноутбуки</button>
+                <button onclick="openCatalogCategory('headphones')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-semibold glass-panel text-gray-300 spring-btn" data-cat="headphones">🎧 Навушники</button>
+                <button onclick="openCatalogCategory('pc')" class="cat-pill px-4 py-2 rounded-2xl text-xs font-semibold glass-panel text-gray-300 spring-btn" data-cat="pc">🖥️ ПК</button>
+            </div>
+
+            <!-- Accordion Container -->
+            <div id="catalogAccordion" class="space-y-3"></div>
+
+            <!-- Floating Save Button -->
+            <div class="fixed bottom-20 left-4 right-4 z-30 max-w-lg mx-auto">
+                <button onclick="applyCatalogToRadar()" id="btnApplyCatalog" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-2xl shadow-blue-600/40 border border-white/15 spring-btn text-sm">
+                    💾 Зберегти та запустити радар (0)
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 3: ПЕРЕВІРКА IMEI & SERIAL NUMBER -->
+        <section id="tab-imei" class="space-y-4 hidden">
+            <div class="glass-panel p-5 rounded-[28px] space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">🔍 Перевірка IMEI / Serial Number</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Перевірка валідності IMEI, блокування iCloud / Find My, оператора (SIM-Lock) та Blacklist.</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="imeiInput" maxlength="17" placeholder="Введіть 15 цифр IMEI або Serial (напр. 356789110482915)" class="flex-grow bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white font-mono tracking-wider focus:outline-none focus:border-blue-500">
+                    <button onclick="pasteImei()" class="px-4 py-3.5 rounded-2xl glass-panel hover:bg-white/15 text-xs font-semibold text-gray-200 spring-btn" title="Вставити з буфера">📋 Вст.</button>
+                </div>
+
+                <button onclick="checkImeiDevice()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 spring-btn text-sm">
+                    ⚡ Пробити пристрій
+                </button>
+            </div>
+
+            <!-- IMEI Result Cards -->
+            <div id="imeiResultSection" class="space-y-3 hidden">
+                <div class="glass-card rounded-3xl p-4.5 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-400">Визначений бренд / база TAC:</span>
+                        <span id="imeiLuhnBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                    </div>
+                    <div id="imeiDeviceName" class="text-base font-bold text-white"></div>
+                    <div id="imeiFormattedNum" class="text-xs font-mono text-gray-400"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="glass-card rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-gray-400">🔒 iCloud / FRP Lock</div>
+                        <div id="imeiIcloudStatus" class="text-sm font-bold text-emerald-400">Готово до перевірки</div>
+                        <div class="text-[10px] text-gray-500">Find My iPhone / Google</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-gray-400">📶 Оператор (SIM-Lock)</div>
+                        <div id="imeiSimStatus" class="text-sm font-bold text-blue-400">Neverlock / Carrier</div>
+                        <div class="text-[10px] text-gray-500">AT&T / T-Mobile / Verizon</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-gray-400">🚫 Blacklist / Втрата</div>
+                        <div id="imeiBlacklistStatus" class="text-sm font-bold text-emerald-400">Clean (Не в ЧС)</div>
+                        <div class="text-[10px] text-gray-500">База GSMA / операторів</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-gray-400">🛡️ MDM / Knox Guard</div>
+                        <div id="imeiMdmStatus" class="text-sm font-bold text-amber-400">Потребує звіту</div>
+                        <div class="text-[10px] text-gray-500">Корпоративний профіль</div>
+                    </div>
+                </div>
+
+                <!-- One-Click Deep Check Links (Auto-copies IMEI) -->
+                <div class="glass-panel rounded-3xl p-4 space-y-2.5">
+                    <div class="text-xs font-semibold text-gray-300">Швидкий перехід у бази (IMEI скопійовано автоматично):</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <a href="https://checkcoverage.apple.com/" target="_blank" onclick="copyCurrentImei()" class="text-center py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white spring-btn"> Apple Coverage ↗</a>
+                        <a href="https://iunlocker.com/check_imei.php" target="_blank" onclick="copyCurrentImei()" class="text-center py-2.5 px-3 rounded-xl bg-blue-600/30 hover:bg-blue-600/40 border border-blue-500/30 text-xs font-semibold text-blue-200 spring-btn">🔓 iCloud & SIM-Lock ↗</a>
+                        <a href="https://www.imei.info/" target="_blank" onclick="copyCurrentImei()" class="text-center py-2.5 px-3 rounded-xl bg-emerald-600/25 hover:bg-emerald-600/35 border border-emerald-500/30 text-xs font-semibold text-emerald-200 spring-btn">📋 Blacklist & Knox ↗</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: НОВИНИ ТА REDDIT AI INSIGHTS -->
+        <section id="tab-news" class="space-y-4 hidden">
+            <div class="glass-panel p-5 rounded-[28px] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">📰 AI-стрічка новин та оглядів з Reddit</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Реальні проблеми власників, баги та вердикти «варто брати чи ні».</p>
+                </div>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    <button onclick="filterNewsVerdict('all', this)" class="news-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white spring-btn">Усі</button>
+                    <button onclick="filterNewsVerdict('buy', this)" class="news-chip px-3 py-1.5 rounded-xl text-xs font-semibold glass-panel text-emerald-400 spring-btn">🟢 Варто брати</button>
+                    <button onclick="filterNewsVerdict('warn', this)" class="news-chip px-3 py-1.5 rounded-xl text-xs font-semibold glass-panel text-rose-400 spring-btn">🔴 Є проблеми</button>
+                </div>
+            </div>
+
+            <div id="newsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+        </section>
+
+        <!-- TAB 5: ПОРІВНЯННЯ МОДЕЛЕЙ -->
+        <section id="tab-compare" class="space-y-4 hidden">
+            <div class="glass-panel p-5 rounded-[28px] space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white">⚖️ AI-Порівняння гаджетів для перекупу</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Ліквідність, ринкова ціна та типові проблеми з Reddit.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="cmpModelA" onchange="renderComparison()" class="bg-black/50 border border-white/10 rounded-2xl px-3.5 py-3 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
+                        <option value="s24u">Samsung S24 Ultra</option>
+                        <option value="s23u">Samsung S23 Ultra</option>
+                        <option value="pixel8">Google Pixel 8</option>
+                        <option value="iphone13">Apple iPhone 13</option>
+                        <option value="macm1">MacBook Air M1</option>
+                    </select>
+                    <select id="cmpModelB" onchange="renderComparison()" class="bg-black/50 border border-white/10 rounded-2xl px-3.5 py-3 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
+                        <option value="iphone13">Apple iPhone 13</option>
+                        <option value="s24u">Samsung S24 Ultra</option>
+                        <option value="s23u">Samsung S23 Ultra</option>
+                        <option value="pixel8">Google Pixel 8</option>
+                        <option value="macm1">MacBook Air M1</option>
+                    </select>
+                </div>
+
+                <div id="comparisonResult" class="grid grid-cols-2 gap-3 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- TAB 6: РИНОК (ANALYTICS) -->
+        <section id="tab-market" class="space-y-4 hidden">
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-0.5">📈 Аналітика ліквідності ринку</h3>
+                        <p class="text-xs text-gray-400">Динаміка цін та середній дисконт по топових категоріях.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-full text-xs font-semibold">Live</span>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-white">📱 Samsung Galaxy S23 / S24 Ultra</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -28% від роздробу</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-white">~31 500 ₴</div>
+                            <div class="text-[10px] text-gray-400">Флагманський попит</div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-white">📱 Google Pixel 8 / 8 Pro</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -24% від ринку</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-white">~18 500 ₴</div>
+                            <div class="text-[10px] text-gray-400">Висока ліквідність</div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-white">📱 Apple iPhone 13 / 14 / 15</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -20% ринку</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-white">~22 400 ₴</div>
+                            <div class="text-[10px] text-gray-400">Топ перепродажу</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: РАДАР (SETTINGS) -->
+        <section id="tab-radar" class="space-y-4 hidden">
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-0.5">📡 Налаштування мультирадара</h3>
+                        <p class="text-xs text-gray-400">Пошукові запити та цінові межі для сканера.</p>
+                    </div>
+                    <button onclick="switchTab('catalog')" class="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-semibold spring-btn">🎛️ Каталог</button>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Пошукові запити (через кому)</label>
+                    <input type="text" id="filterQuery" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">Мін. ціна (₴)</label>
+                        <input type="number" id="filterMinPrice" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">Макс. ціна (₴)</label>
+                        <input type="number" id="filterMaxPrice" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Telegram-канали для моніторингу</label>
+                    <input type="text" id="filterChannels" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="baraholka_ua, iphone_ua">
+                </div>
+
+                <button onclick="saveFilters()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-blue-600/30 spring-btn">
+                    💾 Зберегти та перезапустити радар
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 8: РОЗРАХУНОК (SMART CALC) -->
+        <section id="tab-calc" class="space-y-4 hidden">
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-white mb-0.5">🧮 Калькулятор перекупа & ROI</h3>
+                    <p class="text-xs text-gray-400">Миттєвий підрахунок чистого прибутку та окупності угоди.</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Ціна покупки лота (₴)</label>
+                    <input type="number" id="calcBuy" oninput="calculateProfit()" value="15000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Ціна продажу (₴)</label>
+                    <input type="number" id="calcSell" oninput="calculateProfit()" value="20000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Витрати на ремонт / комплектуючі (₴)</label>
+                    <input type="number" id="calcRepair" oninput="calculateProfit()" value="1000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div id="calcResultBox" class="glass-card p-5 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-300 font-medium">Чистий прибуток:</span>
+                        <span id="resProfit" class="font-black text-emerald-400 text-lg">+4 000 ₴ (~$96)</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-t border-white/10 pt-2.5">
+                        <span class="text-gray-300 font-medium">Рентабельність (ROI):</span>
+                        <span id="resRoi" class="font-bold text-white bg-white/10 px-3 py-1 rounded-full text-xs">25%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- iOS BOTTOM NAVIGATION BAR -->
+    <nav class="glass-panel fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 px-2 py-2.5">
+        <div class="max-w-lg mx-auto flex items-center justify-around">
+            <button onclick="switchTab('feed')" class="nav-btn flex flex-col items-center gap-1 text-blue-400 spring-btn" data-tab="feed">
+                <span class="text-xl">⚡️</span>
+                <span class="text-[10px] font-semibold">Стрічка</span>
+            </button>
+            <button onclick="switchTab('catalog')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white spring-btn" data-tab="catalog">
+                <span class="text-xl">🎛️</span>
+                <span class="text-[10px] font-semibold">Моделі</span>
+            </button>
+            <button onclick="switchTab('imei')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white spring-btn" data-tab="imei">
+                <span class="text-xl">🔍</span>
+                <span class="text-[10px] font-semibold">IMEI</span>
+            </button>
+            <button onclick="switchTab('news')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white spring-btn" data-tab="news">
+                <span class="text-xl">📰</span>
+                <span class="text-[10px] font-semibold">Новини AI</span>
+            </button>
+            <button onclick="switchTab('calc')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white spring-btn" data-tab="calc">
+                <span class="text-xl">🧮</span>
+                <span class="text-[10px] font-semibold">Розрахунок</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let API_BASE = urlParams.get('api') || localStorage.getItem('lotpulse_api') || 'https://c274be1909b5a5.lhr.life';
+        let API_PIN = localStorage.getItem('lotpulse_pin') || '';
+        let GUEST_TOKEN = sessionStorage.getItem('lotpulse_guest') || localStorage.getItem('lotpulse_guest') || '';
+        let currentRole = 'guest';
+        let currentRates = { usd: 41.5, eur: 45.0 };
+        let allLots = [];
+        let activeSourceFilter = 'all';
+        let activeNewsFilter = 'all';
+
+        // === CATALOG DATA (FLAGSHIPS FIRST IN EVERY BRAND) ===
+        const catalogDB = {
+            phones: [
+                {
+                    id: 'samsung',
+                    brand: 'Samsung',
+                    badge: 'SAMSUNG',
+                    countLabel: 'Флагмани + A-серія',
+                    models: [
+                        { name: 'Galaxy S24 Ultra', variants: ['256 GB', '512 GB', '1 TB', 'Усі'] },
+                        { name: 'Galaxy S23 Ultra', variants: ['256 GB', '512 GB', '1 TB', 'Усі'] },
+                        { name: 'Galaxy S22 Ultra', variants: ['128 GB', '256 GB', '512 GB', 'Усі'] },
+                        { name: 'Galaxy S24 / S24+', variants: ['128 GB', '256 GB', '512 GB'] },
+                        { name: 'Galaxy S23 / S23+', variants: ['128 GB', '256 GB'] },
+                        { name: 'Galaxy A55 / A54', variants: ['128 GB', '256 GB'] }
+                    ]
+                },
+                {
+                    id: 'apple',
+                    brand: 'Apple iPhone',
+                    badge: '',
+                    countLabel: 'Pro Max / Pro / Base',
+                    models: [
+                        { name: 'iPhone 16 Pro Max', variants: ['256 GB', '512 GB', '1 TB', 'Усі'] },
+                        { name: 'iPhone 15 Pro Max', variants: ['256 GB', '512 GB', '1 TB', 'Усі'] },
+                        { name: 'iPhone 15 Pro', variants: ['128 GB', '256 GB', '512 GB', 'Усі'] },
+                        { name: 'iPhone 14 Pro Max', variants: ['128 GB', '256 GB', '512 GB', 'Усі'] },
+                        { name: 'iPhone 14 Pro', variants: ['128 GB', '256 GB', '512 GB'] },
+                        { name: 'iPhone 13 Pro / 13', variants: ['128 GB', '256 GB'] }
+                    ]
+                },
+                {
+                    id: 'pixel',
+                    brand: 'Google Pixel',
+                    badge: 'G',
+                    countLabel: 'Pixel 9 / 8 / 7',
+                    models: [
+                        { name: 'Google Pixel 9 Pro XL', variants: ['128 GB', '256 GB', '512 GB', 'Усі'] },
+                        { name: 'Google Pixel 8 Pro', variants: ['128 GB', '256 GB', '512 GB', 'Усі'] },
+                        { name: 'Google Pixel 8', variants: ['128 GB', '256 GB', 'Усі'] },
+                        { name: 'Google Pixel 7 Pro', variants: ['128 GB', '256 GB'] },
+                        { name: 'Google Pixel 7a / 8a', variants: ['128 GB', '256 GB'] }
+                    ]
+                },
+                {
+                    id: 'xiaomi',
+                    brand: 'Xiaomi / POCO',
+                    badge: 'MI',
+                    countLabel: 'Ultra / Pro / F-серія',
+                    models: [
+                        { name: 'Xiaomi 14 Ultra', variants: ['512 GB', '1 TB', 'Усі'] },
+                        { name: 'Xiaomi 14 / 13T Pro', variants: ['256 GB', '512 GB'] },
+                        { name: 'POCO F6 Pro / F5 Pro', variants: ['256 GB', '512 GB'] }
+                    ]
+                }
+            ],
+            laptops: [
+                {
+                    id: 'macbook',
+                    brand: 'Apple MacBook',
+                    badge: '',
+                    countLabel: 'Pro M3/M2/M1 & Air',
+                    models: [
+                        { name: 'MacBook Pro 16 M3 / M2 Pro', variants: ['16/512 GB', '32/1 TB', 'Усі'] },
+                        { name: 'MacBook Pro 14 M1 / M2 / M3', variants: ['16/512 GB', '16/1 TB', 'Усі'] },
+                        { name: 'MacBook Air M2 / M3', variants: ['8/256 GB', '16/512 GB', 'Усі'] },
+                        { name: 'MacBook Air M1', variants: ['8/256 GB', '16/256 GB', 'Усі'] }
+                    ]
+                },
+                {
+                    id: 'gaming_laptops',
+                    brand: 'ASUS ROG / Lenovo Legion',
+                    badge: 'GAMING',
+                    countLabel: 'RTX 4070 / 4060 / 3070',
+                    models: [
+                        { name: 'Lenovo Legion Pro 5 / 7', variants: ['RTX 4070', 'RTX 4060', 'Усі'] },
+                        { name: 'ASUS ROG Zephyrus G14 / G16', variants: ['RTX 4060', 'RTX 3060', 'Усі'] },
+                        { name: 'ASUS TUF Gaming A15 / F15', variants: ['RTX 4060', 'RTX 3050', 'Усі'] }
+                    ]
+                }
+            ],
+            headphones: [
+                {
+                    id: 'airpods',
+                    brand: 'Apple AirPods',
+                    badge: '',
+                    countLabel: 'Pro 2 / Max / 3',
+                    models: [
+                        { name: 'AirPods Pro 2 (USB-C / MagSafe)', variants: ['Оригінал', 'Усі'] },
+                        { name: 'AirPods Max', variants: ['Space Gray', 'Silver', 'Усі'] },
+                        { name: 'AirPods 3 / AirPods 4', variants: ['ANC', 'Standard', 'Усі'] }
+                    ]
+                },
+                {
+                    id: 'sony_audio',
+                    brand: 'Sony / Samsung Buds',
+                    badge: 'AUDIO',
+                    countLabel: 'XM5 / XM4 / Buds Pro',
+                    models: [
+                        { name: 'Sony WH-1000XM5 / XM4', variants: ['Чорні', 'Срібні', 'Усі'] },
+                        { name: 'Samsung Galaxy Buds 3 Pro / 2 Pro', variants: ['Усі'] }
+                    ]
+                }
+            ],
+            pc: [
+                {
+                    id: 'gpu',
+                    brand: 'Відеокарти NVIDIA / AMD',
+                    badge: 'GPU',
+                    countLabel: 'RTX 40 / 30 серія',
+                    models: [
+                        { name: 'RTX 4070 / 4070 Super', variants: ['12 GB', 'Усі'] },
+                        { name: 'RTX 4060 / 4060 Ti', variants: ['8 GB', '16 GB', 'Усі'] },
+                        { name: 'RTX 3070 / 3080', variants: ['8 GB', '10 GB', 'Усі'] },
+                        { name: 'RX 6700 XT / RX 570', variants: ['12 GB', '8 GB', 'Усі'] }
+                    ]
+                },
+                {
+                    id: 'monitors',
+                    brand: 'Монітори 100Hz – 240Hz',
+                    badge: 'DISPLAY',
+                    countLabel: 'MSI / ASUS / LG',
+                    models: [
+                        { name: 'Монітор 144Hz / 165Hz IPS', variants: ['24"', '27"', 'Усі'] },
+                        { name: 'MSI Pro MP2412 / 100Hz', variants: ['24"', 'Усі'] }
+                    ]
+                }
+            ]
+        };
+
+        let activeCatalogCat = 'phones';
+        let openBrandIds = new Set(['samsung']);
+        let openModelKeys = new Set(['Galaxy S24 Ultra']);
+        let selectedQueries = new Set();
+
+        // === AI REDDIT NEWS DATA ===
+        const aiNewsData = [
+            {
+                id: 1,
+                category: '📱 Телефони · r/GooglePixel',
+                verdict: 'buy',
+                verdictText: '🟢 Варто брати (Топ за свої гроші)',
+                title: 'Google Pixel 8 на вторинному ринку: чому перекупи та юзери називають його найкращим компактним флагманом',
+                summary: 'Після останніх оновлень Android та зниження ціни на б/в ринку Pixel 8 показує ідеальне співвідношення камери, екрану 120 Гц та підтримки оновлень до 2030 року.',
+                pros: [
+                    'Флагманська камера та AI-обробка фото на рівні Pro-версій',
+                    'Яскравий OLED-екран 120 Гц та компактний корпус',
+                    'Висока ліквідність на OLX при ціні до 17 000 ₴'
+                ],
+                cons: [
+                    'Модем Exynos гріється на мобільному інтернеті 4G/5G',
+                    'Повільна зарядка (27 Вт) у порівнянні з конкурентами'
+                ],
+                url: 'https://www.reddit.com/r/GooglePixel/'
+            },
+            {
+                id: 2,
+                category: '📱 Телефони · r/iphone',
+                verdict: 'warn',
+                verdictText: '🔴 Є проблеми з Reddit (Перевіряти при купівлі)',
+                title: 'На що скаржаться власники вживаних iPhone 13 Pro / 14 Pro у 2026 році: звіт з Reddit',
+                summary: 'Користувачі r/iphone масово діляться статистикою деградації акумуляторів та нюансами заміни дисплеїв після виходу нових версій iOS.',
+                pros: [
+                    'Все ще найвища швидкість перепродажу в Україні',
+                    'Надійний корпус зі сталі та топова відеозйомка'
+                ],
+                cons: [
+                    'У 65% лотів рідна АКБ нижче 83% — потребує заміни',
+                    'Зустрічаються дешеві TFT-копії екранів замість оригіналу',
+                    'Ризик прихованого MDM-профілю на американських версіях'
+                ],
+                url: 'https://www.reddit.com/r/iphone/'
+            },
+            {
+                id: 3,
+                category: '💻 Ноутбуки · r/laptops',
+                verdict: 'buy',
+                verdictText: '🟢 Варто брати (Максимум автономності)',
+                title: 'MacBook Air M1 (16/256 ГБ): чи актуальний він зараз на вторинці?',
+                summary: 'Обговорення на r/laptops підтверджують: версія на 16 ГБ оперативної памʼяті залишається бестселером для роботи та навчання без конкурентів за автономністю.',
+                pros: [
+                    'Тримає 10–12 годин реальної роботи без розетки',
+                    'Безшумний (без кулерів) та міцний алюмінієвий корпус'
+                ],
+                cons: [
+                    'Базова версія 8 ГБ вже впритул для важких завдань',
+                    'Обовʼязково перевіряти на iCloud / MDM перед оплатою'
+                ],
+                url: 'https://www.reddit.com/r/laptops/'
+            },
+            {
+                id: 4,
+                category: '🎧 Навушники · r/airpods',
+                verdict: 'warn',
+                verdictText: '🔴 Обережно: багато реплік 1:1',
+                title: 'Як відрізнити оригінал AirPods Pro 2 від копій на чіпах Airoha 1562AE за відгуками з Reddit',
+                summary: 'На ринку зʼявилися репліки з робочим шумозаглушенням та серійними номерами, що пробиваються на сайті Apple. На Reddit зібрали чек-лист перевірки.',
+                pros: [
+                    'Оригінальні Pro 2 мають еталонний шумодав та прозорість',
+                    'Високий попит на подарунки та перепродаж'
+                ],
+                cons: [
+                    'Копії на Airoha підробляють навіть анімацію підключення',
+                    'Зношені акумулятори у б/в навушниках не підлягають ремонту'
+                ],
+                url: 'https://www.reddit.com/r/airpods/'
+            }
+        ];
+
+        const compareDB = {
+            s24u: { name: 'Samsung S24 Ultra', price: '35 000 – 41 000 ₴', roi: '+26%', verdict: '🟢 Топ флагман', issues: 'Габарити, перевіряти стилус S-Pen та відсутність MDM' },
+            s23u: { name: 'Samsung S23 Ultra', price: '28 500 – 33 000 ₴', roi: '+28%', verdict: '🟢 Макс маржа', issues: 'Перевіряти екран на вигорання AMOLED та регіон (U1/B)' },
+            pixel8: { name: 'Google Pixel 8', price: '16 500 – 19 000 ₴', roi: '+24%', verdict: '🟢 Варто брати', issues: 'Нагрів модему в 5G, повільна зарядка 27W' },
+            iphone13: { name: 'Apple iPhone 13', price: '18 000 – 21 500 ₴', roi: '+20%', verdict: '🟢 Швидкий продаж', issues: 'Знос АКБ <84%, багато переклеєних екранів' },
+            macm1: { name: 'MacBook Air M1', price: '23 000 – 26 500 ₴', roi: '+22%', verdict: '🟢 Високий попит', issues: 'Перевірка циклів АКБ та блокування MDM / iCloud' }
+        };
+
+        document.getElementById('apiUrlInput').value = API_BASE;
+        document.getElementById('pinInput').value = API_PIN;
+
+        // === CATALOG ACCORDION RENDER & INTERACTION ===
+        function openCatalogCategory(cat) {
+            activeCatalogCat = cat;
+            document.querySelectorAll('.cat-pill').forEach(p => {
+                p.className = p.dataset.cat === cat
+                    ? 'cat-pill px-4 py-2 rounded-2xl text-xs font-semibold bg-blue-600 text-white spring-btn'
+                    : 'cat-pill px-4 py-2 rounded-2xl text-xs font-semibold glass-panel text-gray-300 spring-btn';
+            });
+
+            const brands = catalogDB[cat] || [];
+            if (brands.length > 0 && ![...openBrandIds].some(id => brands.find(b => b.id === id))) {
+                openBrandIds.add(brands[0].id);
+            }
+
+            closeSidebar();
+            switchTab('catalog');
+            renderCatalogAccordion();
+        }
+
+        function toggleBrandAccordion(brandId) {
+            if (openBrandIds.has(brandId)) {
+                openBrandIds.delete(brandId);
+            } else {
+                openBrandIds.add(brandId);
+            }
+            renderCatalogAccordion();
+        }
+
+        function toggleModelAccordion(modelName) {
+            if (openModelKeys.has(modelName)) {
+                openModelKeys.delete(modelName);
+            } else {
+                openModelKeys.add(modelName);
+            }
+            renderCatalogAccordion();
+        }
+
+        function toggleVariantSelection(modelName, variant) {
+            const queryTerm = variant === 'Усі' ? modelName : `${modelName} ${variant}`;
+            if (selectedQueries.has(queryTerm)) {
+                selectedQueries.delete(queryTerm);
+            } else {
+                selectedQueries.add(queryTerm);
+            }
+            updateCatalogCounters();
+            renderCatalogAccordion();
+        }
+
+        function clearCatalogSelection() {
+            selectedQueries.clear();
+            updateCatalogCounters();
+            renderCatalogAccordion();
+        }
+
+        function updateCatalogCounters() {
+            const count = selectedQueries.size;
+            document.getElementById('selectedModelsBadge').innerText = count;
+            document.getElementById('btnApplyCatalog').innerText = `💾 Зберегти та запустити радар (${count})`;
+        }
+
+        function renderCatalogAccordion() {
+            const container = document.getElementById('catalogAccordion');
+            const brands = catalogDB[activeCatalogCat] || [];
+
+            container.innerHTML = brands.map(brand => {
+                const isBrandOpen = openBrandIds.has(brand.id);
+                const brandSelectedCount = [...selectedQueries].filter(q =>
+                    brand.models.some(m => q.startsWith(m.name))
+                ).length;
+
+                let modelsHtml = '';
+                if (isBrandOpen) {
+                    modelsHtml = `<div class="pt-3 mt-3 border-t border-white/10 space-y-2">` + brand.models.map(m => {
+                        const isModelOpen = openModelKeys.has(m.name);
+                        const modelSelected = [...selectedQueries].filter(q => q.startsWith(m.name)).length;
+
+                        const variantsHtml = isModelOpen ? `
+                            <div class="flex flex-wrap gap-2 pt-2.5 pl-5">
+                                ${m.variants.map(v => {
+                                    const qTerm = v === 'Усі' ? m.name : `${m.name} ${v}`;
+                                    const isChecked = selectedQueries.has(qTerm);
+                                    return `
+                                        <button onclick="toggleVariantSelection('${m.name}', '${v}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold spring-btn ${isChecked ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'}">
+                                            ${isChecked ? '✓ ' : ''}${v}
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : '';
+
+                        return `
+                            <div class="rounded-2xl bg-black/30 border ${modelSelected > 0 ? 'border-blue-500/40' : 'border-white/5'} p-3">
+                                <button onclick="toggleModelAccordion('${m.name}')" class="w-full flex items-center justify-between text-left">
+                                    <span class="flex items-center gap-2.5 text-sm font-bold text-white">
+                                        <span class="text-xs text-gray-400">${isModelOpen ? '▼' : '▶'}</span>
+                                        ${m.name}
+                                    </span>
+                                    <span class="text-xs ${modelSelected > 0 ? 'text-blue-400 font-bold' : 'text-gray-400'}">
+                                        ${modelSelected > 0 ? `Обрано: ${modelSelected}` : `${m.variants.length} варіанти`}
+                                    </span>
+                                </button>
+                                ${variantsHtml}
+                            </div>
+                        `;
+                    }).join('') + `</div>`;
+                }
+
+                return `
+                    <div class="glass-card rounded-3xl p-4 ${isBrandOpen ? 'border-white/20' : ''}">
+                        <button onclick="toggleBrandAccordion('${brand.id}')" class="w-full flex items-center justify-between text-left">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-400">${isBrandOpen ? '▼' : '▶'}</span>
+                                <span class="px-2.5 py-1 rounded-xl bg-white/10 text-xs font-black tracking-wider text-white">${brand.badge}</span>
+                                <span class="text-base font-extrabold text-white">${brand.brand}</span>
+                            </div>
+                            <div class="text-xs font-semibold ${brandSelectedCount > 0 ? 'text-emerald-400' : 'text-gray-400'}">
+                                ${brandSelectedCount > 0 ? `✓ ${brandSelectedCount} обрано` : brand.countLabel}
+                            </div>
+                        </button>
+                        ${modelsHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function applyCatalogToRadar() {
+            if (selectedQueries.size === 0) {
+                switchTab('feed');
+                return;
+            }
+            const combinedQuery = [...selectedQueries].join(', ');
+            document.getElementById('filterQuery').value = combinedQuery;
+            await saveFilters();
+        }
+
+        // === IMEI & SERIAL CHECKER LOGIC ===
+        function validateLuhn(imei) {
+            if (!/^\d{15}$/.test(imei)) return false;
+            let sum = 0;
+            for (let i = 0; i < 15; i++) {
+                let digit = parseInt(imei[i], 10);
+                if (i % 2 === 1) {
+                    digit *= 2;
+                    if (digit > 9) digit -= 9;
+                }
+                sum += digit;
+            }
+            return sum % 10 === 0;
+        }
+
+        function detectBrandByImei(code) {
+            if (/^\d{15}$/.test(code)) {
+                if (code.startsWith('35')) return 'Apple iPhone / Samsung Galaxy (TAC 35)';
+                if (code.startsWith('01')) return 'Apple iPhone (US / Global TAC 01)';
+                if (code.startsWith('86')) return 'Xiaomi / POCO / OnePlus (TAC 86)';
+                if (code.startsWith('99')) return 'Google Pixel / CDMA+GSM (TAC 99)';
+                return 'Смартфон GSM / LTE (15-значний IMEI)';
+            }
+            if (/^[A-Z0-9]{10,12}$/i.test(code)) {
+                return 'Apple Serial Number (iPhone / iPad / MacBook / AirPods)';
+            }
+            return 'Невідомий формат номера';
+        }
+
+        async function pasteImei() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('imeiInput').value = text.trim().replace(/\s+/g, '');
+            } catch (e) {}
+        }
+
+        function copyCurrentImei() {
+            const val = document.getElementById('imeiInput').value.trim();
+            if (val && navigator.clipboard) {
+                navigator.clipboard.writeText(val);
+            }
+        }
+
+        function checkImeiDevice() {
+            const raw = document.getElementById('imeiInput').value.trim().replace(/[\s-]/g, '');
+            if (!raw) return;
+
+            const is15Digits = /^\d{15}$/.test(raw);
+            const luhnOk = validateLuhn(raw);
+            const badge = document.getElementById('imeiLuhnBadge');
+
+            if (is15Digits && luhnOk) {
+                badge.innerText = '✅ Валідний IMEI (Luhn OK)';
+                badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/35';
+            } else if (is15Digits && !luhnOk) {
+                badge.innerText = '⚠️ Помилка контрольної суми (Можлива підміна!)';
+                badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/35';
+            } else {
+                badge.innerText = 'ℹ️ Serial Number';
+                badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/35';
+            }
+
+            document.getElementById('imeiDeviceName').innerText = detectBrandByImei(raw);
+            document.getElementById('imeiFormattedNum').innerText = `Код: ${raw}`;
+            document.getElementById('imeiResultSection').classList.remove('hidden');
+            copyCurrentImei();
+        }
+
+        // === SIDEBAR & NAVIGATION ===
+        function openSidebar() {
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const drawer = document.getElementById('sidebarDrawer');
+            backdrop.classList.remove('pointer-events-none', 'opacity-0');
+            backdrop.classList.add('opacity-100');
+            drawer.classList.remove('-translate-x-full');
+        }
+
+        function closeSidebar() {
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const drawer = document.getElementById('sidebarDrawer');
+            backdrop.classList.add('pointer-events-none', 'opacity-0');
+            backdrop.classList.remove('opacity-100');
+            drawer.classList.add('-translate-x-full');
+        }
+
+        function selectDrawerSection(sec) {
+            closeSidebar();
+            if (sec === 'news') switchTab('news');
+            else if (sec === 'imei') switchTab('imei');
+            else if (sec === 'compare') {
+                switchTab('compare');
+                renderComparison();
+            }
+        }
+
+        function switchTab(tabId) {
+            ['feed', 'catalog', 'imei', 'news', 'compare', 'market', 'radar', 'calc'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = btn.dataset.tab === tabId
+                    ? 'nav-btn flex flex-col items-center gap-1 text-blue-400 spring-btn'
+                    : 'nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white spring-btn';
+            });
+        }
+
+        // === NEWS & COMPARISON ===
+        function renderNews() {
+            const container = document.getElementById('newsContainer');
+            const filtered = aiNewsData.filter(item => activeNewsFilter === 'all' || item.verdict === activeNewsFilter);
+
+            container.innerHTML = filtered.map(item => {
+                const badgeStyle = item.verdict === 'buy'
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/35'
+                    : 'bg-rose-500/20 text-rose-400 border-rose-500/35';
+
+                return `
+                    <article onclick="openNewsModal(${item.id})" class="glass-card rounded-3xl p-4.5 cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-[11px] font-semibold text-blue-400">${item.category}</span>
+                                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${badgeStyle}">${item.verdictText}</span>
+                            </div>
+                            <h3 class="text-sm font-bold text-white leading-snug mb-2">${item.title}</h3>
+                            <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-3">${item.summary}</p>
+                        </div>
+                        <div class="pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                            <span class="text-gray-400">Плюсів: <b class="text-emerald-400">${item.pros.length}</b> · Проблем: <b class="text-rose-400">${item.cons.length}</b></span>
+                            <span class="text-blue-400 font-semibold">Детальний розбір →</span>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function filterNewsVerdict(verdict, btnEl) {
+            activeNewsFilter = verdict;
+            document.querySelectorAll('.news-chip').forEach(b => {
+                b.className = 'news-chip px-3 py-1.5 rounded-xl text-xs font-semibold glass-panel text-gray-300 spring-btn';
+            });
+            btnEl.className = 'news-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white spring-btn';
+            renderNews();
+        }
+
+        function openNewsModal(id) {
+            const item = aiNewsData.find(n => n.id === id);
+            if (!item) return;
+
+            const badge = document.getElementById('nmVerdictBadge');
+            badge.innerText = item.verdictText;
+            badge.className = item.verdict === 'buy'
+                ? 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                : 'text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40';
+
+            document.getElementById('nmCategory').innerText = item.category;
+            document.getElementById('nmTitle').innerText = item.title;
+            document.getElementById('nmSummary').innerText = item.summary;
+            document.getElementById('nmPros').innerHTML = item.pros.map(p => `<li>${p}</li>`).join('');
+            document.getElementById('nmCons').innerHTML = item.cons.map(c => `<li>${c}</li>`).join('');
+            document.getElementById('nmSourceLink').href = item.url;
+            document.getElementById('newsModal').classList.remove('hidden');
+        }
+
+        function closeNewsModal() {
+            document.getElementById('newsModal').classList.add('hidden');
+        }
+
+        function renderComparison() {
+            const a = compareDB[document.getElementById('cmpModelA').value];
+            const b = compareDB[document.getElementById('cmpModelB').value];
+            document.getElementById('comparisonResult').innerHTML = [a, b].map(m => `
+                <div class="glass-card rounded-2xl p-4 space-y-2.5">
+                    <div class="text-sm font-bold text-white">${m.name}</div>
+                    <div class="text-xs font-bold text-emerald-400">${m.price}</div>
+                    <div class="text-[11px] px-2 py-0.5 rounded-lg bg-white/10 inline-block font-semibold text-gray-200">Маржа: ${m.roi}</div>
+                    <div class="text-xs font-semibold text-white pt-1">${m.verdict}</div>
+                    <div class="text-[11px] text-rose-300 leading-relaxed">⚠️ ${m.issues}</div>
+                </div>
+            `).join('');
+        }
+
+        // === BACKEND API & AUTH ===
+        async function apiFetch(endpoint, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-Pin': API_PIN,
+                'X-Guest-Token': GUEST_TOKEN,
+                'Authorization': `Bearer ${GUEST_TOKEN}`
+            };
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                ...options,
+                headers: { ...headers, ...(options.headers || {}) }
+            });
+            if (res.status === 403) {
+                openAuthModal();
+                throw new Error('403 Forbidden');
+            }
+            return res;
+        }
+
+        async function checkStatus() {
+            try {
+                const res = await apiFetch('/api/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    currentRole = data.role;
+                    currentRates = data.rates || currentRates;
+                    document.getElementById('usdRate').innerText = `USD: ${currentRates.usd}₴`;
+                    document.getElementById('eurRate').innerText = `EUR: ${currentRates.eur}₴`;
+                    document.getElementById('roleName').innerText = currentRole === 'owner' ? 'Власник' : 'Гість (1 сесія)';
+                    document.getElementById('roleIndicator').className = currentRole === 'owner' ? 'text-blue-400 font-semibold' : 'text-emerald-400 font-semibold';
+                    document.getElementById('ownerBtnText').innerText = currentRole === 'owner' ? 'Admin' : 'Гість';
+                    document.getElementById('drawerStatus').innerText = '● Підключено';
+
+                    if (data.filter) {
+                        document.getElementById('filterQuery').value = data.filter.query || '';
+                        document.getElementById('filterMinPrice').value = data.filter.min_price || '';
+                        document.getElementById('filterMaxPrice').value = data.filter.max_price || '';
+                        document.getElementById('filterChannels').value = data.filter.tg_channels || '';
+                    }
+                    loadLots();
+                }
+            } catch (e) {
+                document.getElementById('drawerStatus').innerText = '● Очікує вхід';
+            }
+        }
+
+        async function loadLots() {
+            try {
+                const res = await apiFetch('/api/lots?limit=60');
+                if (res.ok) {
+                    const data = await res.json();
+                    allLots = data.lots || [];
+                    document.getElementById('countAll').innerText = allLots.length;
+                    renderLots();
+                }
+            } catch (e) {}
+        }
+
+        function renderLots() {
+            const container = document.getElementById('lotsContainer');
+            const filtered = allLots.filter(l => activeSourceFilter === 'all' || l.source === activeSourceFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center py-20 text-gray-500 text-sm">Немає знайдених лотів для цього джерела</div>`;
+                return;
+            }
+
+            let html = '';
+            let hasSuperDeal = false;
+
+            filtered.forEach(lot => {
+                const usdPrice = Math.round(lot.price / currentRates.usd);
+                const badgeColor = lot.source === 'OLX' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                                   lot.source === 'PROM' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                                   lot.source === 'SHAFA' ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' : 'bg-sky-500/20 text-sky-400 border-sky-500/30';
+
+                if (lot.price < 12000) hasSuperDeal = true;
+
+                html += `
+                    <div class="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden">
+                        <div class="flex items-start gap-3.5">
+                            <img src="${lot.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'}" class="w-16 h-16 rounded-2xl object-cover bg-black/40 flex-shrink-0 border border-white/10" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'">
+                            <div class="flex-grow min-w-0">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[10px] px-2.5 py-0.5 rounded-full border font-bold ${badgeColor}">${lot.source}</span>
+                                    <span class="text-[11px] text-gray-400 truncate">📍 ${lot.city || 'Україна'}</span>
+                                </div>
+                                <h4 class="text-xs font-semibold text-white line-clamp-2 leading-relaxed">${lot.title}</h4>
+                            </div>
+                        </div>
+                        <div class="mt-3.5 pt-3 border-t border-white/5 flex items-center justify-between">
+                            <div>
+                                <div class="text-base font-black text-emerald-400">${lot.price.toLocaleString()} ₴</div>
+                                <div class="text-[10px] text-gray-400 font-medium">≈ $${usdPrice}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openCalcWithLot(${lot.price})" class="px-3 py-2 rounded-xl glass-panel text-xs font-medium text-gray-200 hover:text-white spring-btn" title="У калькулятор">🧮</button>
+                                <a href="${lot.url}" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 spring-btn">Відкрити ↗</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            const header = document.getElementById('mainHeader');
+            const badge = document.getElementById('sniperBadge');
+            if (hasSuperDeal) {
+                header.classList.add('sniper-active');
+                badge.classList.remove('hidden');
+            } else {
+                header.classList.remove('sniper-active');
+                badge.classList.add('hidden');
+            }
+        }
+
+        function filterSource(src, btnEl) {
+            activeSourceFilter = src;
+            document.querySelectorAll('.source-chip').forEach(btn => {
+                btn.className = 'source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white spring-btn';
+            });
+            if (btnEl) {
+                btnEl.className = 'source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-lg shadow-blue-600/30 spring-btn';
+            }
+            renderLots();
+        }
+
+        function calculateProfit() {
+            const buy = parseFloat(document.getElementById('calcBuy').value) || 0;
+            const sell = parseFloat(document.getElementById('calcSell').value) || 0;
+            const repair = parseFloat(document.getElementById('calcRepair').value) || 0;
+            const profit = sell - buy - repair;
+            const roi = buy > 0 ? Math.round((profit / buy) * 100) : 0;
+            const usdProf = Math.round(profit / currentRates.usd);
+
+            const resBox = document.getElementById('calcResultBox');
+            const pEl = document.getElementById('resProfit');
+            const rEl = document.getElementById('resRoi');
+
+            pEl.innerText = `${profit > 0 ? '+' : ''}${profit.toLocaleString()} ₴ (~$${usdProf})`;
+            rEl.innerText = `${roi}%`;
+
+            if (profit > 0) {
+                resBox.className = 'glass-card p-5 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-3 transition-all duration-300';
+                pEl.className = 'font-black text-emerald-400 text-lg';
+            } else {
+                resBox.className = 'glass-card p-5 rounded-2xl border-rose-500/40 bg-rose-500/10 space-y-3 transition-all duration-300';
+                pEl.className = 'font-black text-rose-400 text-lg';
+            }
+        }
+
+        function openCalcWithLot(price) {
+            document.getElementById('calcBuy').value = price;
+            document.getElementById('calcSell').value = Math.round(price * 1.28);
+            calculateProfit();
+            switchTab('calc');
+        }
+
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        async function loginWithPin() {
+            API_BASE = document.getElementById('apiUrlInput').value.trim().replace(/\/$/, '');
+            API_PIN = document.getElementById('pinInput').value.trim();
+            localStorage.setItem('lotpulse_api', API_BASE);
+            localStorage.setItem('lotpulse_pin', API_PIN);
+            document.getElementById('authModal').classList.add('hidden');
+            checkStatus();
+        }
+
+        async function requestGuestAccess() {
+            API_BASE = document.getElementById('apiUrlInput').value.trim().replace(/\/$/, '');
+            localStorage.setItem('lotpulse_api', API_BASE);
+            const statusDiv = document.getElementById('guestStatus');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = '⏳ Запит надіслано власнику в Telegram. Очікуємо підтвердження...';
+            statusDiv.className = 'text-center text-xs text-amber-400 mt-2 font-medium';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/request_access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: 'guest_web', name: 'Гість (Mini App)', username: '' })
+                });
+                const data = await res.json();
+                if (data.req_id) {
+                    const reqId = data.req_id;
+                    const interval = setInterval(async () => {
+                        const checkRes = await fetch(`${API_BASE}/api/check_access/${reqId}`);
+                        const checkData = await checkRes.json();
+                        if (checkData.status === 'approved') {
+                            clearInterval(interval);
+                            GUEST_TOKEN = checkData.token;
+                            sessionStorage.setItem('lotpulse_guest', GUEST_TOKEN);
+                            statusDiv.innerText = '✅ Доступ дозволено на 1 сесію!';
+                            statusDiv.className = 'text-center text-xs text-emerald-400 mt-2 font-medium';
+                            setTimeout(() => {
+                                document.getElementById('authModal').classList.add('hidden');
+                                statusDiv.classList.add('hidden');
+                                checkStatus();
+                            }, 800);
+                        } else if (checkData.status === 'denied') {
+                            clearInterval(interval);
+                            statusDiv.innerText = '❌ Власник відхилив запит.';
+                            statusDiv.className = 'text-center text-xs text-rose-400 mt-2 font-medium';
+                        }
+                    }, 2500);
+                }
+            } catch (e) {
+                statusDiv.innerText = '❌ Помилка зʼєднання з сервером ПК.';
+                statusDiv.className = 'text-center text-xs text-rose-400 mt-2 font-medium';
+            }
+        }
+
+        async function triggerScan() {
+            await checkStatus();
+        }
+
+        async function saveFilters() {
+            const payload = {
+                query: document.getElementById('filterQuery').value,
+                min_price: parseInt(document.getElementById('filterMinPrice').value) || 2000,
+                max_price: parseInt(document.getElementById('filterMaxPrice').value) || 45000,
+                condition: 'good',
+                sources: 'olx,prom,shafa,tg',
+                tg_channels: document.getElementById('filterChannels').value,
+                active: true
+            };
+            const res = await apiFetch('/api/filters', { method: 'POST', body: JSON.stringify(payload) });
+            if (res.ok) {
+                switchTab('feed');
+                loadLots();
+            }
+        }
+
+        let isUkr = true;
+        function toggleLang() {
+            isUkr = !isUkr;
+            document.getElementById('langBtn').innerText = isUkr ? 'УКР' : 'РУС';
+            document.getElementById('modalTitle').innerText = isUkr ? 'Вхід у LotPulse Pro' : 'Вход в LotPulse Pro';
+            document.getElementById('modalSub').innerText = isUkr ? 'Введіть PIN-код власника або запитайте гостьовий доступ на 1 сесію.' : 'Введите PIN-код владельца или запросите гостевой доступ на 1 сессию.';
+            document.getElementById('lblApi').innerText = isUkr ? 'URL сервера ПК (Tunnel)' : 'URL сервера ПК (Tunnel)';
+            document.getElementById('lblPin').innerText = isUkr ? 'PIN-код власника' : 'PIN-код владельца';
+            document.getElementById('btnLogin').innerText = isUkr ? 'Увійти за PIN-кодом' : 'Войти по PIN-коду';
+            document.getElementById('lblOr').innerText = isUkr ? 'або для гостя' : 'или для гостя';
+            document.getElementById('btnGuest').innerText = isUkr ? '👋 Запросити доступ у власника (1 сесія)' : '👋 Запросить доступ у владельца (1 сессия)';
+        }
+
+        // Initial Render
+        renderCatalogAccordion();
+        renderNews();
+        renderComparison();
+        checkStatus();
+        setInterval(checkStatus, 30000);
+    </script>
 </body>
 </html>
