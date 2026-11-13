@@ -3,141 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LotPulse Pro — iOS Glassmorphic Edition</title>
+    <title>LotPulse Pro — Ultimate iOS Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box; }
-        body { background-color: #050507; color: #f5f5f7; overflow-x: hidden; }
-        
-        /* OLED Glassmorphism & Mesh Gradients */
+        * { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #030305; color: #f5f5f7; overflow-x: hidden; }
+
+        /* Deep OLED Glassmorphism */
         .glass-panel {
-            background: rgba(22, 22, 26, 0.65);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(18, 18, 24, 0.75);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
         .glass-card {
-            background: rgba(28, 28, 35, 0.5);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            background: rgba(26, 26, 34, 0.6);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
         .glass-card:active {
             transform: scale(0.97);
         }
 
-        /* Mesh Background Animation */
+        /* Live Animated Background Blobs */
         .mesh-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1;
             overflow: hidden;
-            background: #030305;
+            background: #020204;
         }
         .blob {
             position: absolute;
-            filter: blur(100px);
-            opacity: 0.18;
-            animation: float 20s infinite alternate ease-in-out;
+            filter: blur(120px);
+            opacity: 0.22;
+            animation: floatBlob 18s infinite alternate ease-in-out;
         }
-        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #0071e3; }
-        .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #34c759; animation-delay: -5s; }
-        .blob-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: #af52de; animation-delay: -10s; }
+        .blob-1 { top: -15%; left: -10%; width: 55vw; height: 55vw; background: #0066cc; }
+        .blob-2 { bottom: -15%; right: -10%; width: 65vw; height: 65vw; background: #2ecc71; animation-delay: -6s; }
+        .blob-3 { top: 35%; left: 25%; width: 45vw; height: 45vw; background: #9b59b6; animation-delay: -12s; }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 50px) scale(1.1); }
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(40px, 60px) scale(1.15) rotate(10deg); }
         }
 
-        /* Sniper Mode Pulse Header */
-        @keyframes sniperPulse {
-            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4); border-color: rgba(52, 199, 89, 0.6); }
-            70% { box-shadow: 0 0 0 12px rgba(52, 199, 89, 0); border-color: rgba(52, 199, 89, 1); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); border-color: rgba(52, 199, 89, 0.6); }
+        /* Sniper Mode Header Glowing Animation */
+        @keyframes sniperGlow {
+            0% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.2), inset 0 0 15px rgba(46, 204, 113, 0.1); border-color: rgba(46, 204, 113, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(46, 204, 113, 0.5), inset 0 0 25px rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 1); }
+            100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.2), inset 0 0 15px rgba(46, 204, 113, 0.1); border-color: rgba(46, 204, 113, 0.5); }
         }
         .sniper-active {
-            animation: sniperPulse 2s infinite;
+            animation: sniperGlow 3s infinite ease-in-out;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        /* Smooth Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white pb-24">
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white pb-28">
 
-    <!-- Background mesh -->
+    <!-- Living Background -->
     <div class="mesh-bg">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- Auth / Lock Modal -->
-    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl hidden">
-        <div class="glass-panel w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
+    <!-- Auth / Guest Session Modal -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl hidden">
+        <div class="glass-panel w-full max-w-md rounded-[32px] p-7 shadow-2xl relative">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                    <span>🔒</span> <span id="modalTitle">Вхід у LotPulse</span>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
+                    <span class="text-2xl">🔐</span> <span id="modalTitle">Вхід у LotPulse Pro</span>
                 </h2>
-                <button onclick="toggleLang()" id="langBtn" class="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white font-medium">УКР</button>
+                <button onclick="toggleLang()" id="langBtn" class="text-xs px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition">УКР</button>
             </div>
-            <p id="modalSub" class="text-xs text-gray-400 mb-6">Введіть PIN-код власника або запитайте гостевий доступ на 1 сесію.</p>
+            <p id="modalSub" class="text-xs text-gray-400 mb-6 leading-relaxed">Введіть PIN-код власника або запитайте гостевий доступ на 1 сеанс у пару кліків.</p>
             
             <div class="space-y-4">
                 <div>
-                    <label id="lblApi" class="block text-xs font-medium text-gray-400 mb-1">Адреса сервера ПК (URL)</label>
-                    <input type="text" id="apiUrlInput" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                    <label id="lblApi" class="block text-xs font-medium text-gray-400 mb-1.5">URL сервера ПК (Tunnel)</label>
+                    <input type="text" id="apiUrlInput" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition shadow-inner">
                 </div>
                 <div>
-                    <label id="lblPin" class="block text-xs font-medium text-gray-400 mb-1">PIN-код власника</label>
-                    <input type="password" id="pinInput" placeholder="••••••" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white tracking-widest focus:outline-none focus:border-blue-500 transition">
+                    <label id="lblPin" class="block text-xs font-medium text-gray-400 mb-1.5">PIN-код власника</label>
+                    <input type="password" id="pinInput" placeholder="••••••" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white tracking-widest focus:outline-none focus:border-blue-500 transition shadow-inner">
                 </div>
-                <button onclick="loginWithPin()" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-600/30">
+                <button onclick="loginWithPin()" id="btnLogin" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl transition shadow-lg shadow-blue-600/30 active:scale-[0.98]">
                     Увійти за PIN-кодом
                 </button>
                 <div class="relative flex py-2 items-center">
                     <div class="flex-grow border-t border-white/10"></div>
-                    <span id="lblOr" class="flex-shrink mx-4 text-xs text-gray-500 uppercase">або</span>
+                    <span id="lblOr" class="flex-shrink mx-4 text-xs text-gray-500 uppercase tracking-wider">або для друга</span>
                     <div class="flex-grow border-t border-white/10"></div>
                 </div>
-                <button onclick="requestGuestAccess()" id="btnGuest" class="w-full glass-panel hover:bg-white/10 text-white font-medium py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <button onclick="requestGuestAccess()" id="btnGuest" class="w-full glass-panel hover:bg-white/10 text-white font-medium py-3.5 rounded-2xl transition flex items-center justify-center gap-2.5 active:scale-[0.98]">
                     👋 Запросити доступ у власника (1 сесія)
                 </button>
-                <div id="guestStatus" class="text-center text-xs text-amber-400 mt-2 hidden">⏳ Запит надіслано власнику в Telegram. Очікуємо підтвердження...</div>
+                <div id="guestStatus" class="text-center text-xs text-amber-400 mt-2 font-medium hidden">⏳ Запит надіслано власнику в Telegram. Очікуємо підтвердження...</div>
             </div>
         </div>
     </div>
 
-    <!-- Main Header -->
-    <header id="mainHeader" class="glass-panel sticky top-0 z-40 px-4 py-3 border-b border-white/10 transition-all duration-300">
+    <!-- Top iOS Glass Header -->
+    <header id="mainHeader" class="glass-panel sticky top-0 z-40 px-4 py-3.5 border-b border-white/10 transition-all duration-500">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white font-bold text-lg">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-600/30 text-white font-black text-lg tracking-wider">
                     LP
                 </div>
                 <div>
-                    <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                        LotPulse Pro <span id="sniperBadge" class="hidden text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full animate-pulse">🎯 Снайпер</span>
-                    </h1>
-                    <div class="flex items-center gap-2 text-xs text-gray-400">
-                        <span id="roleIndicator" class="text-emerald-400 font-medium">● Онлайн</span>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-bold text-white tracking-tight">LotPulse Pro</h1>
+                        <span id="sniperBadge" class="hidden text-[10px] px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full font-semibold animate-pulse">🎯 Снайпер Активний</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                        <span id="roleIndicator" class="text-emerald-400 font-medium flex items-center gap-1">● <span id="roleName">Онлайн</span></span>
                         <span>•</span>
-                        <span id="usdRate" class="text-gray-300">USD: --</span>
+                        <span id="usdRate" class="text-gray-200 font-medium">USD: --</span>
                         <span>•</span>
-                        <span id="eurRate" class="text-gray-300">EUR: --</span>
+                        <span id="eurRate" class="text-gray-200 font-medium">EUR: --</span>
                     </div>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="triggerScan()" class="p-2.5 rounded-xl glass-panel hover:bg-white/10 text-gray-300 hover:text-white transition" title="Примусовий скани">
+                <button onclick="triggerScan()" class="p-2.5 rounded-2xl glass-panel hover:bg-white/15 text-gray-200 transition active:scale-95" title="Примусовий скани">
                     🔄
                 </button>
-                <button onclick="openAuthModal()" class="px-3 py-1.5 rounded-xl glass-panel text-xs font-medium text-gray-300 hover:text-white transition">
+                <button onclick="openAuthModal()" class="px-3.5 py-2 rounded-2xl glass-panel text-xs font-semibold text-gray-200 hover:text-white transition active:scale-95">
                     🔑 <span id="ownerBtnText">Доступ</span>
                 </button>
             </div>
@@ -150,51 +156,56 @@
         <!-- TAB 1: СТРІЧКА (FEED) -->
         <section id="tab-feed" class="space-y-4">
             <!-- Smart Chip Filters -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <button onclick="filterSource('all')" class="source-chip active px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-md shadow-blue-600/30 transition">🔥 Усі топ</button>
-                <button onclick="filterSource('OLX')" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">🛒 OLX</button>
-                <button onclick="filterSource('PROM')" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">📦 Prom</button>
-                <button onclick="filterSource('SHAFA')" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">👗 Shafa</button>
-                <button onclick="filterSource('TG')" class="source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">💬 Telegram</button>
+            <div class="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                <button onclick="filterSource('all')" class="source-chip active px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition">🔥 Усі топ (<span id="countAll">0</span>)</button>
+                <button onclick="filterSource('OLX')" class="source-chip px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">🛒 OLX</button>
+                <button onclick="filterSource('PROM')" class="source-chip px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">📦 Prom</button>
+                <button onclick="filterSource('SHAFA')" class="source-chip px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">👗 Shafa</button>
+                <button onclick="filterSource('TG')" class="source-chip px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition">💬 Telegram</button>
             </div>
 
             <!-- Lots Feed Container -->
-            <div id="lotsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <!-- Lots injected dynamically -->
-                <div class="text-center py-20 text-gray-500 text-sm">Завантаження лотів з радара...</div>
+            <div id="lotsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div class="col-span-2 text-center py-20 text-gray-500 text-sm">Завантаження лотів з радара...</div>
             </div>
         </section>
 
         <!-- TAB 2: РИНОК (ANALYTICS) -->
         <section id="tab-market" class="space-y-4 hidden">
-            <div class="glass-panel p-5 rounded-3xl">
-                <h3 class="text-base font-bold text-white mb-1">📈 Аналітика ліквідності ринку</h3>
-                <p class="text-xs text-gray-400 mb-4">Динаміка та середній дисконт по топ-моделям телефонів.</p>
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-0.5">📈 Аналітика ліквідності ринку</h3>
+                        <p class="text-xs text-gray-400">Динаміка цін та середній дисконт по топових брендах.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded-full text-xs font-semibold">Live Monobank</span>
+                </div>
+                
                 <div class="space-y-3">
-                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="glass-card p-4.5 rounded-2xl flex items-center justify-between">
                         <div>
                             <div class="text-sm font-semibold text-white">Google Pixel 8 / 8 Pro</div>
-                            <div class="text-xs text-emerald-400">Середній дисконт: -24% від роздробу</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -24% від роздробу</div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-bold text-white">~18 500 ₴</div>
-                            <div class="text-[10px] text-gray-400">Висока ліквідність</div>
+                            <div class="text-[10px] text-gray-400">Високий попит</div>
                         </div>
                     </div>
-                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="glass-card p-4.5 rounded-2xl flex items-center justify-between">
                         <div>
-                            <div class="text-sm font-semibold text-white">iPhone 13 / 14</div>
-                            <div class="text-xs text-emerald-400">Середній дисконт: -19% від ринку</div>
+                            <div class="text-sm font-semibold text-white">Apple iPhone 13 / 14 / 15</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -20% ринку</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-bold text-white">~21 000 ₴</div>
-                            <div class="text-[10px] text-gray-400">Топ продажів</div>
+                            <div class="text-sm font-bold text-white">~22 400 ₴</div>
+                            <div class="text-[10px] text-gray-400">Топ перепродажу</div>
                         </div>
                     </div>
-                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="glass-card p-4.5 rounded-2xl flex items-center justify-between">
                         <div>
                             <div class="text-sm font-semibold text-white">Samsung Galaxy S23 Ultra</div>
-                            <div class="text-xs text-emerald-400">Середній дисконт: -28%</div>
+                            <div class="text-xs text-emerald-400 font-medium mt-0.5">Середній дисконт: -28%</div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm font-bold text-white">~32 000 ₴</div>
@@ -207,62 +218,68 @@
 
         <!-- TAB 3: РАДАР (SETTINGS) -->
         <section id="tab-radar" class="space-y-4 hidden">
-            <div class="glass-panel p-5 rounded-3xl space-y-4">
-                <h3 class="text-base font-bold text-white">⚙️ Налаштування пошуку та фільтрів</h3>
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-white mb-0.5">⚙️ Налаштування мультирадара</h3>
+                    <p class="text-xs text-gray-400">Керуйте параметрами пошуку та ціновими діапазонами.</p>
+                </div>
                 
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Пошукові запити (через кому)</label>
-                    <input type="text" id="filterQuery" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Пошукові запити (через кому)</label>
+                    <input type="text" id="filterQuery" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3.5">
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1">Мін. ціна (₴)</label>
-                        <input type="number" id="filterMinPrice" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">Мін. ціна (₴)</label>
+                        <input type="number" id="filterMinPrice" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1">Макс. ціна (₴)</label>
-                        <input type="number" id="filterMaxPrice" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">Макс. ціна (₴)</label>
+                        <input type="number" id="filterMaxPrice" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Моніторинг Telegram-каналів</label>
-                    <input type="text" id="filterChannels" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="baraholka_ua, iphone_ua">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Telegram-канали для сканування</label>
+                    <input type="text" id="filterChannels" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner" placeholder="baraholka_ua, iphone_ua">
                 </div>
 
-                <button onclick="saveFilters()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-600/30">
-                    💾 Зберегти та перезапустити радар
+                <button onclick="saveFilters()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl transition shadow-lg shadow-blue-600/30 active:scale-[0.98]">
+                    💾 Зберегти налаштування та сканувати
                 </button>
             </div>
         </section>
 
         <!-- TAB 4: РОЗРАХУНОК (SMART CALC) -->
         <section id="tab-calc" class="space-y-4 hidden">
-            <div class="glass-panel p-5 rounded-3xl space-y-4">
-                <h3 class="text-base font-bold text-white">🧮 Калькулятор перекупа & ROI</h3>
+            <div class="glass-panel p-6 rounded-[32px] space-y-4">
+                <div>
+                    <h3 class="text-base font-bold text-white mb-0.5">🧮 Калькулятор перекупа & ROI</h3>
+                    <p class="text-xs text-gray-400">Розрахунок чистого прибутку та рентабельності угоди.</p>
+                </div>
                 
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Ціна покупки лота (₴)</label>
-                    <input type="number" id="calcBuy" oninput="calculateProfit()" value="15000" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Ціна покупки лота (₴)</label>
+                    <input type="number" id="calcBuy" oninput="calculateProfit()" value="15000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Очікувана ціна продажу (₴)</label>
-                    <input type="number" id="calcSell" oninput="calculateProfit()" value="20000" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Ціна продажу / ринок (₴)</label>
+                    <input type="number" id="calcSell" oninput="calculateProfit()" value="20000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Витрати на ремонт / комплектуючі (₴)</label>
-                    <input type="number" id="calcRepair" oninput="calculateProfit()" value="1000" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Витрати на ремонт / комплектуючі (₴)</label>
+                    <input type="number" id="calcRepair" oninput="calculateProfit()" value="1000" class="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 shadow-inner">
                 </div>
 
-                <div id="calcResultBox" class="glass-card p-4 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-2">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-300">Чистий прибуток:</span>
-                        <span id="resProfit" class="font-bold text-emerald-400">+4 000 ₴ (~$96)</span>
+                <div id="calcResultBox" class="glass-card p-5 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-300 font-medium">Чистий прибуток:</span>
+                        <span id="resProfit" class="font-black text-emerald-400 text-lg">+4 000 ₴ (~$96)</span>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-300">Рентабельність (ROI):</span>
-                        <span id="resRoi" class="font-bold text-white">25%</span>
+                    <div class="flex justify-between items-center text-sm border-t border-white/10 pt-2.5">
+                        <span class="text-gray-300 font-medium">Рентабельність (ROI):</span>
+                        <span id="resRoi" class="font-bold text-white bg-white/10 px-3 py-1 rounded-full text-xs">25%</span>
                     </div>
                 </div>
             </div>
@@ -271,23 +288,23 @@
     </main>
 
     <!-- iOS Bottom Navigation Bar -->
-    <nav class="glass-panel fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 px-6 py-2">
+    <nav class="glass-panel fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 px-6 py-2.5">
         <div class="max-w-md mx-auto flex items-center justify-between">
-            <button onclick="switchTab('feed')" class="nav-btn flex flex-col items-center gap-1 text-blue-400 transition" data-tab="feed">
+            <button onclick="switchTab('feed')" class="nav-btn flex flex-col items-center gap-1 text-blue-400 transition transform active:scale-90" data-tab="feed">
                 <span class="text-xl">⚡️</span>
-                <span class="text-[10px] font-medium">Стрічка</span>
+                <span class="text-[10px] font-semibold tracking-wide">Стрічка</span>
             </button>
-            <button onclick="switchTab('market')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition" data-tab="market">
+            <button onclick="switchTab('market')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition transform active:scale-90" data-tab="market">
                 <span class="text-xl">📈</span>
-                <span class="text-[10px] font-medium">Ринок</span>
+                <span class="text-[10px] font-semibold tracking-wide">Ринок</span>
             </button>
-            <button onclick="switchTab('radar')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition" data-tab="radar">
+            <button onclick="switchTab('radar')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition transform active:scale-90" data-tab="radar">
                 <span class="text-xl">📡</span>
-                <span class="text-[10px] font-medium">Радар</span>
+                <span class="text-[10px] font-semibold tracking-wide">Радар</span>
             </button>
-            <button onclick="switchTab('calc')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition" data-tab="calc">
+            <button onclick="switchTab('calc')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition transform active:scale-90" data-tab="calc">
                 <span class="text-[19px]">🧮</span>
-                <span class="text-[10px] font-medium">Калькулятор</span>
+                <span class="text-[10px] font-semibold tracking-wide">Калькулятор</span>
             </button>
         </div>
     </nav>
@@ -301,12 +318,11 @@
         let allLots = [];
         let activeSourceFilter = 'all';
 
-        // Init on load
         document.getElementById('apiUrlInput').value = API_BASE;
         document.getElementById('pinInput').value = API_PIN === '948215' ? '' : API_PIN;
 
         async function apiFetch(endpoint, options = {}) {
-            headers = {
+            let headers = {
                 'Content-Type': 'application/json',
                 'X-Pin': API_PIN,
                 'X-Guest-Token': GUEST_TOKEN,
@@ -334,8 +350,9 @@
                     currentRates = data.rates || currentRates;
                     document.getElementById('usdRate').innerText = `USD: ${currentRates.usd}₴`;
                     document.getElementById('eurRate').innerText = `EUR: ${currentRates.eur}₴`;
-                    document.getElementById('roleIndicator').innerText = currentRole === 'owner' ? '● Власник' : '● Гість (1 сесія)';
-                    document.getElementById('ownerBtnText').innerText = currentRole === 'owner' ? 'Адмін' : 'Гість';
+                    document.getElementById('roleName').innerText = currentRole === 'owner' ? 'Власник (Admin)' : 'Гість (1 сесія)';
+                    document.getElementById('roleIndicator').className = currentRole === 'owner' ? 'text-blue-400 font-medium flex items-center gap-1' : 'text-emerald-400 font-medium flex items-center gap-1';
+                    document.getElementById('ownerBtnText').innerText = currentRole === 'owner' ? '👑 Admin' : '👋 Guest';
                     
                     if(data.filter) {
                         document.getElementById('filterQuery').value = data.filter.query || '';
@@ -346,7 +363,7 @@
                     loadLots();
                 }
             } catch (e) {
-                console.log('Server offline or needs auth');
+                console.log('Server offline or awaiting auth');
             }
         }
 
@@ -356,6 +373,7 @@
                 if (res.ok) {
                     let data = await res.json();
                     allLots = data.lots || [];
+                    document.getElementById('countAll').innerText = allLots.length;
                     renderLots();
                 }
             } catch (e) {}
@@ -366,7 +384,7 @@
             let filtered = allLots.filter(l => activeSourceFilter === 'all' || l.source === activeSourceFilter);
             
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center py-16 text-gray-500 text-sm">Немає лотів для цього джерела</div>`;
+                container.innerHTML = `<div class="col-span-2 text-center py-20 text-gray-500 text-sm">Немає активних лотів для цього джерела</div>`;
                 return;
             }
 
@@ -379,28 +397,28 @@
                                  lot.source === 'PROM' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
                                  lot.source === 'SHAFA' ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' : 'bg-sky-500/20 text-sky-400 border-sky-500/30';
                 
-                if (lot.price < 10000) hasSuperDeal = true;
+                if (lot.price < 12000) hasSuperDeal = true;
 
                 html += `
-                    <div class="glass-card rounded-2xl p-3.5 flex flex-col justify-between relative overflow-hidden">
-                        <div class="flex items-start gap-3">
-                            <img src="${lot.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'}" class="w-16 h-16 rounded-xl object-cover bg-black/40 flex-shrink-0" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'">
+                    <div class="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group shadow-lg">
+                        <div class="flex items-start gap-3.5">
+                            <img src="${lot.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'}" class="w-18 h-18 rounded-2xl object-cover bg-black/40 flex-shrink-0 border border-white/10" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'">
                             <div class="flex-grow min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold ${badgeColor}">${lot.source}</span>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[10px] px-2.5 py-0.5 rounded-full border font-bold tracking-wide ${badgeColor}">${lot.source}</span>
                                     <span class="text-[11px] text-gray-400 truncate">📍 ${lot.city || 'Україна'}</span>
                                 </div>
-                                <h4 class="text-xs font-semibold text-white line-clamp-2 leading-snug mb-1">${lot.title}</h4>
+                                <h4 class="text-xs font-semibold text-white line-clamp-2 leading-relaxed mb-1">${lot.title}</h4>
                             </div>
                         </div>
-                        <div class="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between">
+                        <div class="mt-3.5 pt-3 border-t border-white/5 flex items-center justify-between">
                             <div>
-                                <div class="text-sm font-bold text-emerald-400">${lot.price.toLocaleString()} ₴</div>
-                                <div class="text-[10px] text-gray-400">≈ $${usdPrice}</div>
+                                <div class="text-base font-black text-emerald-400">${lot.price.toLocaleString()} ₴</div>
+                                <div class="text-[10px] text-gray-400 font-medium">≈ $${usdPrice} по курсу</div>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <button onclick="openCalcWithLot(${lot.price})" class="px-2.5 py-1.5 rounded-xl glass-panel text-[11px] font-medium text-gray-300 hover:text-white transition">🧮</button>
-                                <a href="${lot.url}" target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-md shadow-blue-600/20">Переглянути ↗</a>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openCalcWithLot(${lot.price})" class="px-3 py-2 rounded-xl glass-panel text-xs font-medium text-gray-200 hover:text-white transition active:scale-95" title="У калькулятор">🧮</button>
+                                <a href="${lot.url}" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-md shadow-blue-600/30 active:scale-95">Оригінал ↗</a>
                             </div>
                         </div>
                     </div>
@@ -408,7 +426,6 @@
             });
             container.innerHTML = html;
 
-            // Sniper Header Effect
             let header = document.getElementById('mainHeader');
             let badge = document.getElementById('sniperBadge');
             if (hasSuperDeal) {
@@ -423,9 +440,9 @@
         function filterSource(src) {
             activeSourceFilter = src;
             document.querySelectorAll('.source-chip').forEach(btn => {
-                btn.className = 'source-chip px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition';
+                btn.className = 'source-chip px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap glass-panel text-gray-300 hover:text-white transition';
             });
-            event.target.className = 'source-chip active px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-md shadow-blue-600/30 transition';
+            event.target.className = 'source-chip active px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition';
             renderLots();
         }
 
@@ -436,9 +453,9 @@
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = 'nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition';
+                btn.className = 'nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition transform active:scale-90';
             });
-            event.currentTarget.className = 'nav-btn flex flex-col items-center gap-1 text-blue-400 transition';
+            event.currentTarget.className = 'nav-btn flex flex-col items-center gap-1 text-blue-400 transition transform active:scale-90';
         }
 
         function calculateProfit() {
@@ -457,11 +474,11 @@
             rEl.innerText = `${roi}%`;
 
             if (profit > 0) {
-                resBox.className = 'glass-card p-4 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-2';
-                pEl.className = 'font-bold text-emerald-400';
+                resBox.className = 'glass-card p-5 rounded-2xl border-emerald-500/40 bg-emerald-500/10 space-y-3 transition-all duration-300';
+                pEl.className = 'font-black text-emerald-400 text-lg';
             } else {
-                resBox.className = 'glass-card p-4 rounded-2xl border-red-500/40 bg-red-500/10 space-y-2';
-                pEl.className = 'font-bold text-red-400';
+                resBox.className = 'glass-card p-5 rounded-2xl border-red-500/40 bg-red-500/10 space-y-3 transition-all duration-300';
+                pEl.className = 'font-black text-red-400 text-lg';
             }
         }
 
@@ -470,8 +487,9 @@
             document.getElementById('calcSell').value = Math.round(price * 1.3);
             calculateProfit();
             switchTab('calc');
-            document.querySelectorAll('.nav-btn').forEach(b => b.className = 'nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition');
-            // highlight calc tab
+            document.querySelectorAll('.nav-btn').forEach((b, i) => {
+                b.className = i === 3 ? 'nav-btn flex flex-col items-center gap-1 text-blue-400 transition transform active:scale-90' : 'nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-white transition transform active:scale-90';
+            });
         }
 
         function openAuthModal() {
@@ -510,7 +528,7 @@
                             GUEST_TOKEN = checkData.token;
                             localStorage.setItem('lotpulse_guest', GUEST_TOKEN);
                             statusDiv.innerText = '✅ Доступ дозволено на 1 сесію!';
-                            statusDiv.className = 'text-center text-xs text-emerald-400 mt-2';
+                            statusDiv.className = 'text-center text-xs text-emerald-400 mt-2 font-medium';
                             setTimeout(() => {
                                 document.getElementById('authModal').classList.add('hidden');
                                 statusDiv.classList.add('hidden');
@@ -519,7 +537,7 @@
                         } else if (checkData.status === 'denied') {
                             clearInterval(interval);
                             statusDiv.innerText = '❌ У доступі відмовлено власником.';
-                            statusDiv.className = 'text-center text-xs text-red-400 mt-2';
+                            statusDiv.className = 'text-center text-xs text-red-400 mt-2 font-medium';
                         }
                     }, 3000);
                 }
@@ -545,7 +563,7 @@
             };
             let res = await apiFetch('/api/filters', { method: 'POST', body: JSON.stringify(data) });
             if (res.ok) {
-                alert('✅ Фільтри оновлено та запущено сканування!');
+                alert('✅ Фільтри успішно оновлено та запущено сканування!');
                 loadLots();
             }
         }
@@ -554,16 +572,15 @@
         function toggleLang() {
             isUkr = !isUkr;
             document.getElementById('langBtn').innerText = isUkr ? 'УКР' : 'РУС';
-            document.getElementById('modalTitle').innerText = isUkr ? 'Вхід у LotPulse' : 'Вход в LotPulse';
-            document.getElementById('modalSub').innerText = isUkr ? 'Введіть PIN-код власника або запитайте гостевий доступ на 1 сесію.' : 'Введите PIN-код владельца или запросите гостевой доступ на 1 сессию.';
-            document.getElementById('lblApi').innerText = isUkr ? 'Адреса сервера ПК (URL)' : 'Адрес сервера ПК (URL)';
+            document.getElementById('modalTitle').innerText = isUkr ? 'Вхід у LotPulse Pro' : 'Вход в LotPulse Pro';
+            document.getElementById('modalSub').innerText = isUkr ? 'Введіть PIN-код власника або запитайте гостевий доступ на 1 сеанс у пару кліків.' : 'Введите PIN-код владельца или запросите гостевой доступ на 1 сеанс в пару кликов.';
+            document.getElementById('lblApi').innerText = isUkr ? 'URL сервера ПК (Tunnel)' : 'URL сервера ПК (Tunnel)';
             document.getElementById('lblPin').innerText = isUkr ? 'PIN-код власника' : 'PIN-код владельца';
             document.getElementById('btnLogin').innerText = isUkr ? 'Увійти за PIN-кодом' : 'Войти по PIN-коду';
-            document.getElementById('lblOr').innerText = isUkr ? 'або' : 'или';
+            document.getElementById('lblOr').innerText = isUkr ? 'або для друга' : 'или для друга';
             document.getElementById('btnGuest').innerText = isUkr ? '👋 Запросити доступ у власника (1 сесія)' : '👋 Запросить доступ у владельца (1 сессия)';
         }
 
-        // Run on start
         checkStatus();
         setInterval(checkStatus, 30000);
     </script>
